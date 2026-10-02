@@ -1,0 +1,28 @@
+{
+  "name": "videoexplain-skill",
+  "version": "0.2.0",
+  "description": "Portable concept and video explanation skill with a lightweight local CLI",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sunghoojung/videoexplain-skill.git"
+  },
+  "type": "module",
+  "bin": {
+    "explain-concept": "skills/explain-concept/scripts/explain-concept.mjs"
+  },
+  "files": [
+    "skills/explain-concept/SKILL.md",
+    "skills/explain-concept/LICENSE",
+    "skills/explain-concept/agents/*.yaml",
+    "skills/explain-concept/references/*.md",
+    "skills/explain-concept/scripts/*.mjs",
+    "skills/explain-concept/scripts/*.py",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}
