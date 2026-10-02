@@ -1,6 +1,6 @@
 {
   "title": "Gradient descent on a simple bowl",
-  "source": "scenes.example.py",
+  "source": "scenes.example.jsx",
   "scenes": [
     {
       "name": "GradientDescent",

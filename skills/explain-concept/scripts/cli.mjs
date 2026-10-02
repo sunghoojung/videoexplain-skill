@@ -1,4 +1,3 @@
-import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   cp,
@@ -10,11 +9,15 @@ import {
   rename,
   rm,
 } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { fileURLToPath } from "node:url";
 import { VERSION } from "./version.mjs";
+import { available, run } from "./process.mjs";
+
+const require = createRequire(import.meta.url);
 
 const skill = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const invocation =
@@ -48,7 +51,6 @@ const schemas = {
   render: {
     project: { type: "string" },
     output: { type: "string" },
-    python: { type: "string" },
     quality: { type: "string", default: "m" },
     voice: { type: "string" },
   },
@@ -63,7 +65,7 @@ const commandHelp = {
   ingest:
     "Read a paper. Required: --paper <pdf-or-text> --output <new-directory>. Optional: --python <interpreter>, --preview-pages <0-20> (default 3).",
   render:
-    "Render an authored narrated explainer. Required: --project <project.json> --output <new-directory>. Optional: --python <interpreter>, --quality l|m|h (default m), --voice <local-voice-name>.",
+    "Render an authored narrated explainer. Required: --project <project.json> --output <new-directory>. Optional: --quality l|m|h (default m), --voice <local-voice-name>.",
 };
 
 function emit(data) {
@@ -74,50 +76,6 @@ function usage(message) {
   const error = new Error(message);
   error.exitCode = 2;
   return error;
-}
-
-function run(program, argv, timeout = 5000) {
-  return new Promise((done, reject) => {
-    const child = spawn(program, argv, {
-      stdio: ["ignore", "pipe", "pipe"],
-      windowsHide: true,
-    });
-    let stdout = "",
-      stderr = "",
-      overflow = false;
-    const collect = (channel, data) => {
-      if (channel === "out") stdout += data;
-      else stderr += data;
-      if (stdout.length + stderr.length > 16384) {
-        overflow = true;
-        child.kill();
-      }
-    };
-    child.stdout.setEncoding("utf8").on("data", (data) => collect("out", data));
-    child.stderr.setEncoding("utf8").on("data", (data) => collect("err", data));
-    const timer = timeout ? setTimeout(() => child.kill(), timeout) : undefined;
-    child.on("error", (error) => {
-      clearTimeout(timer);
-      reject(error);
-    });
-    child.on("close", (code, signal) => {
-      clearTimeout(timer);
-      if (overflow) reject(new Error("Command exceeded its output limit."));
-      else if (signal)
-        reject(
-          new Error("Command was interrupted or exceeded its time limit."),
-        );
-      else done({ code, stdout, stderr });
-    });
-  });
-}
-
-async function available(program, argv) {
-  try {
-    return (await run(program, argv)).code === 0;
-  } catch {
-    return false;
-  }
 }
 
 async function pythonCommand(explicit) {
@@ -140,7 +98,7 @@ async function pythonCommand(explicit) {
       return program;
   }
   throw new Error(
-    "Select Python 3.11+ with --python; the chosen environment must contain the rendering dependencies.",
+    "Select Python 3.11+ with --python; PDF ingestion needs pypdf in the chosen environment.",
   );
 }
 
@@ -322,9 +280,8 @@ export async function main(args) {
               `import importlib.util,sys; sys.exit(importlib.util.find_spec('${module}') is None)`,
             ])
           : false;
-      const [paper, animation, ffmpeg, speech, installed] = await Promise.all([
+      const [paper, ffmpeg, speech, installed] = await Promise.all([
         moduleReady("pypdf"),
-        moduleReady("manim"),
         Promise.all(
           ["ffmpeg", "ffprobe"].map((tool) => available(tool, ["-version"])),
         ),
@@ -335,14 +292,28 @@ export async function main(args) {
         ),
         exists(join(agentRoots.codex, "explain-concept", "SKILL.md")),
       ]);
+      let remotion = true;
+      for (const module of [
+        "remotion",
+        "@remotion/bundler",
+        "@remotion/renderer",
+      ]) {
+        try {
+          require.resolve(module);
+        } catch {
+          remotion = false;
+        }
+      }
       return emit({
+        renderer: "remotion",
+        browser: "Headless Chrome is downloaded on first render when needed",
         version: VERSION,
         python,
         paper_ingestion: paper ? "ready" : "pypdf needed",
         rendering:
-          animation && ffmpeg.every(Boolean)
+          remotion && ffmpeg.every(Boolean)
             ? "ready"
-            : "Manim, ffmpeg, and ffprobe needed",
+            : "Run through the npx package with ffmpeg and ffprobe on PATH",
         narration: speech.some(Boolean)
           ? "local speech ready"
           : "supply beat audio or install a speech engine",
@@ -390,6 +361,10 @@ export async function main(args) {
       )
         throw usage("--preview-pages must be an integer from 0 to 20.");
     }
+    if (command === "render") {
+      const { render } = await import("./render.mjs");
+      return emit(await render(values));
+    }
     const python = await pythonCommand(values.python);
     const forwarded = Object.entries(values)
       .filter(
@@ -398,7 +373,7 @@ export async function main(args) {
       .flatMap(([key, value]) => [`--${key}`, value]);
     const result = await run(
       python,
-      [join(skill, "scripts", "pipeline.py"), command, ...forwarded],
+      [join(skill, "scripts", "read_paper.py"), ...forwarded],
       0,
     );
     if (result.code !== 0) {
