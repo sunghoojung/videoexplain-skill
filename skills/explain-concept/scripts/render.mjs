@@ -1,6 +1,5 @@
 import {
   cp,
-  lstat,
   mkdir,
   mkdtemp,
   readFile,
@@ -12,22 +11,11 @@ import {
 } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { basename, dirname, extname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { available, run } from "./process.mjs";
+import { available, fileInfo, run, skill, speechEngine } from "./runtime.mjs";
 
 const require = createRequire(import.meta.url);
-const skill = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const fps = 30;
 const sizes = { l: [854, 480], m: [1280, 720], h: [1920, 1080] };
-
-async function exists(path) {
-  try {
-    return await lstat(path);
-  } catch (error) {
-    if (error.code === "ENOENT") return null;
-    throw error;
-  }
-}
 
 async function execute(program, args) {
   const result = await run(program, args, 900000);
@@ -36,6 +24,10 @@ async function execute(program, args) {
       `${basename(program)} failed: ${(result.stderr || result.stdout).trim().slice(-2000)}`,
     );
   return result.stdout;
+}
+
+function ffmpeg(args) {
+  return execute("ffmpeg", ["-nostdin", "-v", "error", "-n", ...args]);
 }
 
 async function probe(path) {
@@ -88,7 +80,7 @@ async function loadProject(path) {
   const source = resolve(dirname(path), project.source);
   if (
     ![".jsx", ".tsx", ".js", ".ts"].includes(extname(source)) ||
-    !(await exists(source))?.isFile()
+    !(await fileInfo(source))?.isFile()
   )
     throw new Error(
       "Source must be an existing React JavaScript or TypeScript module.",
@@ -110,7 +102,7 @@ async function loadProject(path) {
       if (
         beat.audio !== undefined &&
         (typeof beat.audio !== "string" ||
-          !(await exists(resolve(dirname(path), beat.audio)))?.isFile())
+          !(await fileInfo(resolve(dirname(path), beat.audio)))?.isFile())
       )
         throw new Error("Supplied beat audio must be an existing file.");
     }
@@ -141,7 +133,7 @@ export async function render(values) {
   const projectPath = resolve(values.project);
   const { project, source } = await loadProject(projectPath);
   const output = resolve(values.output);
-  const current = await exists(output);
+  const current = await fileInfo(output);
   if (
     current &&
     (!current.isDirectory() ||
@@ -151,33 +143,19 @@ export async function render(values) {
     throw new Error(
       "Use a new or empty output directory; existing work is preserved.",
     );
-  const [ffmpeg, ffprobe] = await Promise.all(
+  const [hasFfmpeg, hasFfprobe] = await Promise.all(
     ["ffmpeg", "ffprobe"].map((tool) => available(tool, ["-version"])),
   );
-  if (!ffmpeg || !ffprobe)
+  if (!hasFfmpeg || !hasFfprobe)
     throw new Error("Narrated rendering needs ffmpeg and ffprobe on PATH.");
-  let engine;
-  if (
-    project.scenes.some((scene) =>
-      scene.beats.some((beat) => beat.audio === undefined),
-    )
-  ) {
-    for (const candidate of ["say", "espeak-ng", "espeak"]) {
-      if (
-        await available(
-          candidate,
-          candidate === "say" ? ["-v", "?"] : ["--version"],
-        )
-      ) {
-        engine = candidate;
-        break;
-      }
-    }
-    if (!engine)
-      throw new Error(
-        "Supply audio for each beat, or install say/espeak-ng for local narration.",
-      );
-  }
+  const needsSpeech = project.scenes.some((scene) =>
+    scene.beats.some((beat) => beat.audio === undefined),
+  );
+  const engine = needsSpeech ? await speechEngine() : null;
+  if (needsSpeech && !engine)
+    throw new Error(
+      "Supply audio for each beat, or install say/espeak-ng for local narration.",
+    );
   // Rendering imports stay out of the install, help, and version paths.
   const [
     { bundle },
@@ -197,11 +175,11 @@ export async function render(values) {
       dirname(projectPath),
       project.public || "public",
     );
-    if (await exists(suppliedPublic))
+    if (await fileInfo(suppliedPublic))
       await cp(suppliedPublic, publicDir, { recursive: true });
     else await mkdir(publicDir);
     const publicAudio = join(publicDir, "__narration");
-    if (await exists(publicAudio))
+    if (await fileInfo(publicAudio))
       throw new Error(
         "The public/__narration directory is reserved for generated speech.",
       );
@@ -241,10 +219,7 @@ export async function render(values) {
         const spoken = await duration(raw);
         const frames = Math.ceil((spoken + 0.3) * fps);
         const wav = `${name}.wav`;
-        await execute("ffmpeg", [
-          "-nostdin",
-          "-v",
-          "error",
+        await ffmpeg([
           "-i",
           raw,
           "-ar",
@@ -257,7 +232,6 @@ export async function render(values) {
           String(frames / fps),
           "-c:a",
           "pcm_s16le",
-          "-n",
           join(audioDir, wav),
         ]);
         wavs.push(wav);
@@ -278,10 +252,7 @@ export async function render(values) {
     }
     const audioList = join(audioDir, "concat.txt");
     await writeFile(audioList, wavs.map((name) => `file '${name}'`).join("\n"));
-    await execute("ffmpeg", [
-      "-nostdin",
-      "-v",
-      "error",
+    await ffmpeg([
       "-f",
       "concat",
       "-safe",
@@ -290,7 +261,6 @@ export async function render(values) {
       audioList,
       "-c:a",
       "pcm_s16le",
-      "-n",
       join(publicAudio, "narration.wav"),
     ]);
     const [width, height] = sizes[values.quality];
@@ -399,7 +369,10 @@ export async function render(values) {
       renderer: "remotion",
     };
   } finally {
-    if (browser) await browser.close({ silent: true });
-    await rm(staging, { recursive: true, force: true });
+    try {
+      await browser?.close({ silent: true });
+    } finally {
+      await rm(staging, { recursive: true, force: true });
+    }
   }
 }

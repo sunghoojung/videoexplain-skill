@@ -13,6 +13,22 @@ const ink = "#f1f5f9",
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" };
 const point = (x) => [56 + (x / 3.5) * 540, 326 - ((x * x) / 10) * 290];
 
+const curve = Array.from({ length: 81 }, (_, i) => point((i / 80) * 3.2))
+  .map(([x, y], i) => `${i ? "L" : "M"}${x},${y}`)
+  .join(" ");
+const descriptions = [
+  "Start with a guess",
+  "Use the slope to take a step",
+  "Repeat the same rule",
+  "Understand the update",
+];
+const values = [
+  "x = 3",
+  "3 - 0.25 × 6 = 1.5",
+  "1.5 - 0.25 × 3 = 0.75",
+  "x_next = x - α · f′(x)",
+];
+
 export function GradientDescent({ beats }) {
   const frame = useCurrentFrame();
   const { width, fps } = useVideoConfig();
@@ -24,30 +40,13 @@ export function GradientDescent({ beats }) {
     [0, 1],
     clamp,
   );
-  const x =
-    step === 0
-      ? 3
-      : step === 1
-        ? 3 - 1.5 * progress
-        : step === 2
-          ? 1.5 - 0.75 * progress
-          : 0.75;
+  const positions = [3, 1.5, 0.75, 0.75];
+  const x = interpolate(
+    progress,
+    [0, 1],
+    [positions[Math.max(step - 1, 0)], positions[step]],
+  );
   const [px, py] = point(x);
-  const curve = Array.from({ length: 81 }, (_, i) => point((i / 80) * 3.2))
-    .map(([x, y], i) => `${i ? "L" : "M"}${x},${y}`)
-    .join(" ");
-  const descriptions = [
-    "Start with a guess",
-    "Use the slope to take a step",
-    "Repeat the same rule",
-    "Understand the update",
-  ];
-  const values = [
-    "x = 3",
-    "3 - 0.25 × 6 = 1.5",
-    "1.5 - 0.25 × 3 = 0.75",
-    "x_next = x - α · f′(x)",
-  ];
 
   return (
     <AbsoluteFill

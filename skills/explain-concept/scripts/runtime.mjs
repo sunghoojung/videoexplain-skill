@@ -1,4 +1,9 @@
 import { spawn } from "node:child_process";
+import { lstat } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+export const skill = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 export function run(program, argv, timeout = 5000) {
   return new Promise((done, reject) => {
@@ -42,4 +47,23 @@ export async function available(program, argv) {
   } catch {
     return false;
   }
+}
+
+export async function fileInfo(path) {
+  try {
+    return await lstat(path);
+  } catch (error) {
+    if (error.code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+export async function speechEngine() {
+  for (const program of ["say", "espeak-ng", "espeak"]) {
+    if (
+      await available(program, program === "say" ? ["-v", "?"] : ["--version"])
+    )
+      return program;
+  }
+  return null;
 }
