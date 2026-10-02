@@ -6,9 +6,9 @@ from manim import (
     RIGHT,
     UP,
     Axes,
+    DecimalNumber,
     Dot,
     FadeIn,
-    FadeOut,
     Line,
     Text,
     ValueTracker,
@@ -51,32 +51,32 @@ class GradientDescent(NarratedScene):
                 axes.c2p(position.get_value(), position.get_value() ** 2)
             )
         )
-        label = Text(
-            "x = 3\ny = 9", font_size=27, line_spacing=1.3, color="#FBBF24"
-        ).to_edge(RIGHT, buff=0.8)
+        x_value = DecimalNumber(
+            3, mob_class=Text, num_decimal_places=2, font_size=27, color="#FBBF24"
+        )
+        y_value = DecimalNumber(
+            9, mob_class=Text, num_decimal_places=4, font_size=27, color="#FBBF24"
+        )
+        label = (
+            VGroup(
+                VGroup(Text("x =", font_size=27, color="#FBBF24"), x_value).arrange(
+                    RIGHT, buff=0.15
+                ),
+                VGroup(Text("y =", font_size=27, color="#FBBF24"), y_value).arrange(
+                    RIGHT, buff=0.15
+                ),
+            )
+            .arrange(DOWN, aligned_edge=LEFT, buff=0.35)
+            .to_edge(RIGHT, buff=0.8)
+        )
+        x_value.add_updater(lambda number: number.set_value(position.get_value()))
+        y_value.add_updater(lambda number: number.set_value(position.get_value() ** 2))
         self.beat(FadeIn(VGroup(title, axes, curve, function, x_label, dot, label)))
         tangent = Line(axes.c2p(2.4, 5.4), axes.c2p(3.12, 9.72), color="#FBBF24")
         self.add(tangent)
-        next_label = Text(
-            "x = 1.5\ny = 2.25", font_size=27, line_spacing=1.3, color="#FBBF24"
-        ).move_to(label)
-        self.beat(
-            position.animate.set_value(1.5),
-            FadeOut(label),
-            FadeIn(next_label),
-            run_time=1.8,
-        )
-        label = next_label
+        self.beat(position.animate.set_value(1.5), run_time=1.8)
         self.remove(tangent)
-        next_label = Text(
-            "x = 0.75\ny = 0.5625", font_size=27, line_spacing=1.3, color="#FBBF24"
-        ).move_to(label)
-        self.beat(
-            position.animate.set_value(0.75),
-            FadeOut(label),
-            FadeIn(next_label),
-            run_time=1.8,
-        )
+        self.beat(position.animate.set_value(0.75), run_time=1.8)
         equation = Text(
             "x_next = x - α · f'(x)", font_size=30, color="#F8FAFC"
         ).to_edge(DOWN, buff=0.5)
