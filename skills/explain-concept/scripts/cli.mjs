@@ -29,7 +29,7 @@ const agentRoots = {
   ),
 };
 const schemas = {
-  doctor: {},
+  doctor: { python: { type: "string" } },
   install: {
     agent: { type: "string", default: "codex" },
     path: { type: "string" },
@@ -39,21 +39,31 @@ const schemas = {
     mode: { type: "string", default: "concept" },
     full: { type: "boolean" },
   },
-  prepare: Object.fromEntries(
-    ["video", "subtitles", "output", "start", "end", "max-frames", "jobs"].map(
-      (key) => [key, { type: "string" }],
-    ),
-  ),
+  ingest: {
+    paper: { type: "string" },
+    output: { type: "string" },
+    python: { type: "string" },
+    "preview-pages": { type: "string" },
+  },
+  render: {
+    project: { type: "string" },
+    output: { type: "string" },
+    python: { type: "string" },
+    quality: { type: "string", default: "m" },
+    voice: { type: "string" },
+  },
 };
 const commandHelp = {
   doctor:
-    "Check explanation, caption, and frame readiness; no packages are installed. Example: explain-concept doctor",
+    "Check paper ingestion and narrated rendering dependencies. Optional: --python <interpreter>.",
   install:
-    "Install the skill. --agent codex|claude|opencode (default codex); --path <skills-parent>; --replace backs up an existing differing install. Examples: explain-concept install; explain-concept install --agent claude",
+    "Install the skill. --agent codex|claude|opencode (default codex); --path <skills-parent>; --replace keeps a backup of the existing installation.",
   guide:
-    "Read teaching instructions. --mode concept|video|animation (default concept); --full shows all text (default preview 1200 chars). Examples: explain-concept guide; explain-concept guide --mode video --full",
-  prepare:
-    "Prepare local video/captions. Required: --output <new-directory>; one or both of --video <file> and --subtitles <srt-or-vtt>. Optional: --start <seconds> (0), --end <seconds> (source end), --max-frames <1-60> (8), --jobs <1-4> (2). Examples: explain-concept prepare --subtitles lesson.vtt --output evidence; explain-concept prepare --video lesson.mp4 --start 30 --end 60 --output passage",
+    "Read instructions. --mode concept|paper|production (default concept); --full shows complete text.",
+  ingest:
+    "Read a paper. Required: --paper <pdf-or-text> --output <new-directory>. Optional: --python <interpreter>, --preview-pages <0-20> (default 3).",
+  render:
+    "Render an authored narrated explainer. Required: --project <project.json> --output <new-directory>. Optional: --python <interpreter>, --quality l|m|h (default m), --voice <local-voice-name>.",
 };
 
 function emit(data) {
@@ -110,21 +120,27 @@ async function available(program, argv) {
   }
 }
 
-async function pythonCommand() {
-  const candidates = process.env.PAPEREXPLAIN_PYTHON
-    ? [process.env.PAPEREXPLAIN_PYTHON]
-    : ["python3", "python"];
+async function pythonCommand(explicit) {
+  const selected = explicit || process.env.PAPEREXPLAIN_PYTHON;
+  const candidates = selected
+    ? [selected]
+    : [
+        resolve(".venv/bin/python"),
+        resolve(".venv/Scripts/python.exe"),
+        "python3",
+        "python",
+      ];
   for (const program of candidates) {
     if (
       await available(program, [
         "-c",
-        "import sys; sys.exit(sys.version_info < (3, 9))",
+        "import sys; sys.exit(sys.version_info < (3, 11))",
       ])
     )
       return program;
   }
   throw new Error(
-    "Caption and video preparation need Python 3.9+; explanation and skill installation work without it.",
+    "Select Python 3.11+ with --python; the chosen environment must contain the rendering dependencies.",
   );
 }
 
@@ -242,12 +258,14 @@ export async function main(args) {
         "doctor: check readiness",
         "install: install the skill",
         "guide: read teaching instructions",
-        "prepare: prepare video evidence",
+        "ingest: read a research paper",
+        "render: create a narrated explainer",
       ],
       examples: [
         "npx --yes . doctor",
         "npx --yes . install",
-        "npx --yes . prepare --subtitles lesson.vtt --output evidence",
+        "npx --yes . ingest --paper paper.pdf --output paper-source",
+        "npx --yes . render --project project.json --output video",
       ],
     };
     if (json) emit(help);
@@ -270,7 +288,7 @@ export async function main(args) {
   try {
     if (!Object.hasOwn(schemas, command))
       throw usage(
-        `Unknown command ${command}; choose doctor, install, guide, or prepare.`,
+        `Unknown command ${command}; choose doctor, install, guide, ingest, or render.`,
       );
     let values;
     try {
@@ -296,43 +314,54 @@ export async function main(args) {
       return;
     }
     if (command === "doctor") {
-      const [python, videoTools, installed] = await Promise.all([
-        pythonCommand().catch(() => null),
+      const python = await pythonCommand(values.python).catch(() => null);
+      const moduleReady = (module) =>
+        python
+          ? available(python, [
+              "-c",
+              `import importlib.util,sys; sys.exit(importlib.util.find_spec('${module}') is None)`,
+            ])
+          : false;
+      const [paper, animation, ffmpeg, speech, installed] = await Promise.all([
+        moduleReady("pypdf"),
+        moduleReady("manim"),
         Promise.all(
           ["ffmpeg", "ffprobe"].map((tool) => available(tool, ["-version"])),
+        ),
+        Promise.all(
+          ["say", "espeak-ng", "espeak"].map((tool) =>
+            available(tool, tool === "say" ? ["-v", "?"] : ["--version"]),
+          ),
         ),
         exists(join(agentRoots.codex, "explain-concept", "SKILL.md")),
       ]);
       return emit({
-        bin: join(skill, "scripts", "explain-concept.mjs").replace(
-          homedir(),
-          "~",
-        ),
-        description: "Teach concepts and prepare local video evidence",
         version: VERSION,
-        explanations: "ready; no API keys needed",
-        captions: python ? "ready" : "Python 3.9+ needed",
-        frames:
-          python && videoTools.every(Boolean)
+        python,
+        paper_ingestion: paper ? "ready" : "pypdf needed",
+        rendering:
+          animation && ffmpeg.every(Boolean)
             ? "ready"
-            : "Python 3.9+ and FFmpeg tools needed",
+            : "Manim, ffmpeg, and ffprobe needed",
+        narration: speech.some(Boolean)
+          ? "local speech ready"
+          : "supply beat audio or install a speech engine",
         codex_skill: installed ? "installed" : "not installed",
-        help: [`${invocation} install`, `${invocation} guide --full`],
       });
     }
     if (command === "install")
       return emit({
         ...(await install(values)),
-        next: "Use $explain-concept to explain a concept, paper, or video.",
+        next: "Use $explain-concept to create a narrated video from a paper or concept.",
       });
     if (command === "guide") {
       const files = {
         concept: "SKILL.md",
-        video: "references/video-input.md",
-        animation: "references/animated-video.md",
+        paper: "references/paper.md",
+        production: "references/animated-video.md",
       };
       if (!Object.hasOwn(files, values.mode))
-        throw usage("--mode must be concept, video, or animation.");
+        throw usage("--mode must be concept, paper, or production.");
       const text = await readFile(join(skill, files[values.mode]), "utf8");
       return emit({
         mode: values.mode,
@@ -344,57 +373,47 @@ export async function main(args) {
           : {}),
       });
     }
-    if (!values.output || (!values.video && !values.subtitles))
-      throw usage(
-        "prepare requires --output and at least one of --video or --subtitles.",
-      );
-    for (const [flag, min, max] of [
-      ["start", 0, Infinity],
-      ["end", 0, Infinity],
-      ["max-frames", 1, 60],
-      ["jobs", 1, 4],
-    ]) {
-      if (
-        values[flag] !== undefined &&
-        (!values[flag].trim() ||
-          !Number.isFinite(Number(values[flag])) ||
-          Number(values[flag]) < min ||
-          Number(values[flag]) > max ||
-          (["jobs", "max-frames"].includes(flag) &&
-            !Number.isInteger(Number(values[flag]))))
-      )
-        throw usage(`Invalid --${flag} value.`);
-    }
     if (
-      values.end !== undefined &&
-      Number(values.end) <= Number(values.start || 0)
+      !values.output ||
+      !(command === "ingest" ? values.paper : values.project)
     )
-      throw usage("--end must be greater than --start.");
-    const python = await pythonCommand();
+      throw usage(commandHelp[command]);
+    if (command === "render" && !["l", "m", "h"].includes(values.quality))
+      throw usage("--quality must be l, m, or h.");
+    if (command === "ingest" && values["preview-pages"] !== undefined) {
+      const count = Number(values["preview-pages"]);
+      if (
+        !values["preview-pages"].trim() ||
+        !Number.isInteger(count) ||
+        count < 0 ||
+        count > 20
+      )
+        throw usage("--preview-pages must be an integer from 0 to 20.");
+    }
+    const python = await pythonCommand(values.python);
     const forwarded = Object.entries(values)
-      .filter(([key]) => Object.hasOwn(schemas.prepare, key))
+      .filter(
+        ([key]) => key !== "python" && Object.hasOwn(schemas[command], key),
+      )
       .flatMap(([key, value]) => [`--${key}`, value]);
     const result = await run(
       python,
-      [join(skill, "scripts", "prepare_video.py"), ...forwarded],
+      [join(skill, "scripts", "pipeline.py"), command, ...forwarded],
       0,
     );
     if (result.code !== 0) {
-      const message =
-        result.stderr.trim().slice(-1200) || "Evidence preparation failed.";
+      const message = result.stderr.trim().slice(-2000) || "Pipeline failed.";
       throw result.code === 2 ? usage(message) : new Error(message);
     }
-    emit({
-      ...JSON.parse(result.stdout),
-      next: "Read the manifest and transcript, and inspect frames before explaining the video.",
-    });
+    emit(JSON.parse(result.stdout));
   } catch (error) {
     process.exitCode = error.exitCode || 1;
     console.error(
       JSON.stringify({
         error: error.message,
         help:
-          commandHelp[command] || "Commands: doctor, install, guide, prepare",
+          commandHelp[command] ||
+          "Commands: doctor, install, guide, ingest, render",
       }),
     );
   }

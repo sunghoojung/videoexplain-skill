@@ -1,0 +1,24 @@
+{
+  "title": "Gradient descent on a simple bowl",
+  "source": "scenes.example.py",
+  "scenes": [
+    {
+      "name": "GradientDescent",
+      "beats": [
+        {
+          "text": "How can we find the bottom of a curve? Start at x equals three on the bowl y equals x squared. Its height is nine."
+        },
+        {
+          "text": "The slope here is six. With a step size of one quarter, subtract one quarter times six. Our next position is one point five, and the height drops to two point two five."
+        },
+        {
+          "text": "Now the slope is three. Apply the same rule again: one point five minus one quarter times three gives zero point seven five. Each step follows the local slope downhill."
+        },
+        {
+          "text": "The update rule is x next equals x minus alpha times the derivative. On this simple bowl, our chosen step size moves us toward zero. Larger steps can overshoot, and general functions can have other local minima."
+        }
+      ],
+      "references": []
+    }
+  ]
+}

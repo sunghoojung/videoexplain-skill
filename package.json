@@ -1,7 +1,7 @@
 {
   "name": "videoexplain-skill",
-  "version": "0.2.0",
-  "description": "Portable concept and video explanation skill with a lightweight local CLI",
+  "version": "0.3.0",
+  "description": "Create original narrated explainer videos from research papers and concepts",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -20,7 +20,10 @@
     "skills/explain-concept/scripts/*.mjs",
     "skills/explain-concept/scripts/*.py",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "skills/explain-concept/assets/*.py",
+    "skills/explain-concept/assets/*.json",
+    "skills/explain-concept/requirements.txt"
   ],
   "engines": {
     "node": ">=20"

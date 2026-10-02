@@ -1,85 +1,81 @@
 ---
 name: explain-concept
-description: "Explain concepts, research papers, and the ideas in videos through intuition, concrete examples, and appropriate visual reasoning. Use for teaching a topic, unpacking a video or transcript, or creating an educational storyboard or animated explainer."
+description: "Turn a research paper or concept into an original narrated explainer video with worked examples, source-grounded reasoning, and animated diagrams. Use for paper-to-video or topic-to-video creation, not for summarizing existing videos."
 ---
 
-# Explain Concept
+# Paper or Concept to Narrated Video
 
-Adapted from PaperExplainAgent's source-grounded, intuition-first teaching and
-scene planning. The active model does the explanation and planning directly;
-ordinary explanations need no API keys, model calls, or rendering dependencies.
+Accept a research paper (PDF, paper URL, or text) or a concept. The default result
+is an original narrated MP4 with captions and reproducible animation source.
+The active model reads the material, develops the explanation, and writes the
+scene code. The bundled renderer executes that authored project.
 
-## Select the deliverable
+## Understand the input
 
-Infer the subject, audience, depth, and format from the request. Default to a
-concise explanation for a curious non-specialist. Ask only when ambiguity
-materially changes the answer. Respect the user's language and prior knowledge.
-Use relaxed, plain language by default. Introduce technical terms as needed;
-avoid ceremonial headings and long preambles for simple questions.
+Infer the audience, language, and depth from the request. Default to a curious
+non-specialist and a focused two-to-four-minute video. Ask only when missing
+information materially changes the explanation. Honor an explicit request for
+text, a storyboard, or source only; otherwise continue through rendering.
 
-Load only the reference for the requested mode. For caption or frame evidence,
-prefer the lightweight local helper instead of starting the upstream pipeline.
-The installed CLI can check readiness with
-`node /path/to/explain-concept/scripts/explain-concept.mjs doctor`.
+For a paper, read [paper.md](references/paper.md). Ground the mechanism, evidence,
+and limits in the actual paper and inspect its important figures and equations.
+For a concept, establish its definition, prerequisites, mechanism, and conditions
+of validity. Verify facts from primary sources when needed.
 
-- **Concept or paper:** Teach the idea directly. Read
-  [teaching.md](references/teaching.md) for the explanation method.
-- **Existing video:** Explain what the video teaches, with source timestamps
-  when available. Read [video-input.md](references/video-input.md) before
-  acquiring or interpreting video evidence, then apply the teaching method.
-- **Create an explainer video:** Read
-  [animated-video.md](references/animated-video.md) to turn the teaching plan
-  into a storyboard, narration, and, when requested and supported, a rendered
-  animation. A request to explain a video does not imply making a new one.
+Read [teaching.md](references/teaching.md) to select a small worked example that
+makes the mechanism visible. State the one thing the viewer should understand
+at the end. Favor an explanation of why it works over a list of definitions or
+paper sections. Clearly distinguish illustrative values from reported results.
 
-## Ground the explanation
+## Build the original explanation
 
-Read supplied material before attributing claims to it. For a paper, inspect the
-relevant methods, figures, assumptions, and results, not just its abstract.
-For a video, track whether the evidence is captions, audio, frames, or the full
-video. Keep the creator's claims separate from your explanatory additions and
-corrections. External facts that need verification should use appropriate
-primary sources; mark uncertain or disputed interpretations.
+Plan a short progression: concrete problem, intuitive example, mechanism or
+formal rule, and useful takeaway with limits. For a research paper, also show
+what changes relative to the baseline and what evidence supports its claims.
+Keep the audience's prerequisites in mind and define symbols before using them.
 
-If a source cannot be accessed, say what is missing. You may explain the general
-topic if useful, but do not present that as a summary of unseen material.
+Choose animation because a change communicates something: an update, flow,
+comparison, geometric relationship, or experimental mechanism. Keep labels,
+colors, and object identity consistent. Diagrams must represent the actual idea;
+a decorative transformation must not imply a false equivalence.
 
-## Teach for understanding
+Use plain, conversational narration. Explain a worked example step by step,
+with visible intermediate states. Reduce scope to fit the requested duration
+instead of rushing speech or cramming all of a paper into one video.
 
-Build the smallest explanation that makes the mechanism understandable:
+## Produce the video
 
-1. Start with a concrete question or problem the concept solves.
-2. Work one simple example and make the key relationship visible.
-3. Connect that intuition to the definition, mechanism, or equation.
-4. Test the explanation with a counterexample, edge case, or common confusion.
-5. Return to the original question and state the useful takeaway.
+Read [animated-video.md](references/animated-video.md) for the project format,
+measured narration timing, dependencies, and render command. Write the original
+Manim scenes and `project.json`, then render them. The starter in `assets/` is a
+runnable example of the format, not a generic scene generator; adapt the visuals
+and narration to the subject.
 
-These are reasoning moves, not mandatory output headings. Skip moves that add
-no value for the requested depth. Define symbols before using them, distinguish
-analogy from mechanism, and state where an analogy breaks. Preserve technical
-accuracy rather than making every idea geometric or pretending it is intuitive.
+Use the installed CLI through Node, or the repository's npx command. Check
+`doctor` before rendering and select the Python environment containing Manim.
+Use local speech synthesis or supplied narration audio. The CLI does not call a
+second language model; all explanation and code authoring happen in the agent.
 
-Choose visuals when they explain a relationship more clearly: diagrams for
-structure, plots for quantitative change, animation for a meaningful sequence.
-Use consistent mappings between labels, colors, and objects. Provide text
-equivalents for important visual content. A short answer needs no elaborate
-production plan.
+If a dependency is missing, complete the source and narration, resolve the
+specific missing dependency when authorized and feasible, and retry. If rendering
+remains blocked, report the exact limitation and deliver the authored project.
+Do not present a storyboard or silent clip as a completed narrated video.
 
-## Check and deliver
+## Verify and deliver
 
-Check the worked example, units, assumptions, and limits. Verify that the
-explanation answers the user's actual question and that each source attribution
-is supported by evidence you accessed. For rendered outputs, inspect the result
-and disclose any unverified audio, visuals, or timing.
+Check the worked example, units, assumptions, and paper claims. Inspect frames
+at important explanation steps and scene transitions. Check label readability,
+overlap, clipping, and whether the visual actually shows the spoken mechanism.
+Confirm the final MP4 contains nonempty audio and video, captions track measured
+speech, and the duration matches the intended lesson. Listen when playback is
+available; distinguish checks performed from checks unavailable.
 
-Deliver the explanation or requested artifact, not internal planning notes.
-For an existing video, include useful timestamp references and the scope of
-available evidence. For a generated artifact, provide its file and state whether
-it is a storyboard, runnable source, silent render, or narrated final video.
+Deliver the narrated video, captions, and animation project. Keep paper scene
+references in the manifest so the explanation can be traced to its source. A
+brief accompanying note should identify the central idea and any relevant limits.
 
 ## Provenance
 
-Derived from [PaperExplainAgent](https://github.com/mihirballari/PaperExplainAgent)
-at commit `498b25b2c677308439d9e40195c91b4a5d46c494`, particularly its teaching,
-storyboard, narration, and evaluation prompts. See
+Adapted from [PaperExplainAgent](https://github.com/mihirballari/PaperExplainAgent)
+at commit `498b25b2c677308439d9e40195c91b4a5d46c494`. See
 [provenance.md](references/provenance.md) and [LICENSE](LICENSE).

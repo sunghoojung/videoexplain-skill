@@ -6,5 +6,6 @@ PaperExplainAgent/
 dist/
 *.tgz
 .env
+.venv/
 evidence/
 output/
