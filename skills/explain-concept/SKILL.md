@@ -47,12 +47,12 @@ instead of rushing speech or cramming all of a paper into one video.
 
 Read [animated-video.md](references/animated-video.md) for the project format,
 measured narration timing, dependencies, and render command. Write the original
-Manim scenes and `project.json`, then render them. The starter in `assets/` is a
+React scenes and `project.json`, then render them. The starter in `assets/` is a
 runnable example of the format, not a generic scene generator; adapt the visuals
 and narration to the subject.
 
-Use the installed CLI through Node, or the repository's npx command. Check
-`doctor` before rendering and select the Python environment containing Manim.
+Use the packaged CLI through npx so its Remotion and React dependencies are
+available. Check `doctor` before rendering.
 Use local speech synthesis or supplied narration audio. The CLI does not call a
 second language model; all explanation and code authoring happen in the agent.
 

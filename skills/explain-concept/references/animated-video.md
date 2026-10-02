@@ -1,57 +1,51 @@
-# Produce an original narrated explainer
+# Produce a narrated Remotion video
 
 ## Author the lesson
 
-Plan a small set of scenes with a learning objective, meaningful visual changes,
-and spoken narration. A scene should teach one relationship or computation.
-Break its narration into short beats that correspond to changes the viewer can
-see. Keep enough time to inspect intermediate states. For a paper, record the
-section, page, equation, or figure supporting each sourced scene.
+Write original React scenes for the paper or concept. Each scene should teach
+one relationship or computation with a worked example and meaningful changes.
+Introduce symbols after establishing what they represent. For paper results,
+preserve units, experimental conditions, and source references.
 
-Use the concrete example throughout the lesson. Introduce notation after the
-viewer understands what it represents. Label schematic diagrams and illustrative
-values. Preserve units and experimental conditions when showing paper results.
+Split narration into short beats corresponding to visible steps. Keep each
+beat concise enough to read as a caption, usually one or two sentences. Reduce
+scope to fit the requested duration instead of accelerating speech.
 
-## Runtime
+## Runtime and command
 
-The renderer needs Python 3.11+, Manim Community 0.21, ffmpeg, and ffprobe. PDF
-text ingestion additionally uses pypdf. The CLI itself has no npm dependencies.
-Use an existing compatible environment or install the two Python packages into
-an isolated environment. For example, use the requirements bundled with the
-installed skill:
+Run the packaged renderer through npx so its pinned Remotion and React
+dependencies resolve even when the skill is installed without a checkout:
 
 ```bash
-uv venv --python 3.12 .venv
-uv pip install --python .venv/bin/python -r /path/to/explain-concept/requirements.txt
+npx --yes --package=github:sunghoojung/videoexplain-skill explain-concept doctor
+npx --yes --package=github:sunghoojung/videoexplain-skill explain-concept render \
+  --project project.json --output video --quality m
 ```
 
-Manim's native Cairo/Pango dependencies must be available; follow its official
-installation instructions for the host. Check the environment with:
+Rendering needs Node.js 20+, ffmpeg, and ffprobe. Remotion obtains Headless Chrome
+on first render if needed. Python is needed only for the optional paper ingestion
+helper. From a repository checkout, run `npm ci` and invoke the CLI with Node.
 
-```bash
-npx --yes . doctor --python .venv/bin/python
-```
-
-Local speech uses macOS `say` or Linux `espeak-ng`/`espeak`. The voice is selected
-with `--voice`. For higher-quality or externally generated narration, provide
-an audio file for each beat. Use the requested language and pronounce symbols
-in spoken text. Supplied audio should speak the beat's `text`; the renderer
-measures duration but does not perform speech recognition to check its content.
+Local narration uses macOS `say` or Linux `espeak-ng`/`espeak`; select a voice with
+`--voice`. To use recorded or externally generated narration, supply beat audio.
+Its spoken content must match `text`; the renderer measures audio rather than
+performing speech recognition. Use the requested language and spell symbols in
+spoken form so the speech engine pronounces them correctly.
 
 ## Project format
 
-Write `project.json` and original Manim source in a working directory:
+Write `project.json` beside the authored scene module:
 
 ```json
 {
   "title": "The idea being explained",
-  "source": "scenes.py",
+  "source": "scenes.jsx",
   "scenes": [
     {
       "name": "Mechanism",
       "beats": [
-        {"text": "A short spoken explanation of the first visible step."},
-        {"text": "The next visible step follows from the first."}
+        {"text": "The first visible step solves a concrete problem."},
+        {"text": "The next step follows from the first."}
       ],
       "references": ["Paper section 3.2, equation 1, PDF page 4"]
     }
@@ -59,58 +53,71 @@ Write `project.json` and original Manim source in a working directory:
 }
 ```
 
-`source` and optional beat `audio` paths are relative to `project.json`. A beat
-with `audio` uses that file instead of synthesizing speech. Scene `name` must
-match a class in the source. Write original code and narration for the requested
-paper or concept; the example in `assets/` only demonstrates the contract.
+`source` is a JSX, TSX, JS, or TS module exporting a named React component for
+each scene. Source and optional beat `audio` paths are relative to the project.
+Place images, fonts, and other assets in a sibling `public/` directory and access
+them using Remotion's `staticFile()`. Set `public` to another asset directory if
+needed. `public/__narration` is reserved for generated speech. Set `captions` to
+`false` only when visible captions are unwanted; the SRT is still produced.
 
-Subclass `NarratedScene` from the bundled `narrated_scene` module. The renderer
-adds the module to the scene's import path and supplies measured speech lengths:
+## Scene contract
 
-```python
-from manim import FadeIn, Text
-from narrated_scene import NarratedScene
+Each component receives `beats` and `durationInFrames`. Each resolved beat has
+`text`, `startFrame`, `durationInFrames`, and `speechSeconds`. Beat frames are
+relative to the current scene. Remotion's `useCurrentFrame()` is also relative
+to the scene because the renderer wraps it in a `Sequence`.
 
+```jsx
+import React from 'react';
+import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
 
-class Mechanism(NarratedScene):
-    def construct(self):
-        label = Text("A concrete example")
-        self.beat(FadeIn(label))
-        self.beat(label.animate.shift([1, 0, 0]), run_time=1.5)
+export function Mechanism({beats}) {
+  const frame = useCurrentFrame();
+  const shift = interpolate(
+    frame,
+    [beats[1].startFrame, beats[1].startFrame + 30],
+    [0, 200],
+    {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'},
+  );
+  return <AbsoluteFill style={{background: '#0b1220', color: 'white'}}>
+    <div style={{transform: `translateX(${shift}px)`, padding: 80}}>
+      A concrete example
+    </div>
+  </AbsoluteFill>;
+}
 ```
 
-Call `self.beat(...)` once per narration beat, in order. It plays the given
-animation at the start of the spoken beat and holds the result for the measured
-remainder. `self.beat()` can hold an existing diagram while explaining it.
-For exact within-beat timing, split narration into smaller beats. Avoid timed
-`play` or `wait` calls outside beats; they can break synchronization. A scene
-with the wrong number of beats or a materially wrong duration fails rendering.
+The renderer measures speech first, pads each beat with at least 0.3 seconds,
+and rounds its length to a whole frame at 30 fps. Use the supplied beat boundaries
+instead of guessed seconds. Split beats when a spoken sentence needs multiple
+precisely timed visual changes. Animate through `useCurrentFrame`, `interpolate`,
+and `spring`; CSS transitions, timers, and nondeterministic effects do not provide
+reliable frame-based rendering.
 
-Use semantic movement and readable layouts. Reserve margins and caption space.
-Keep quantities consistently labeled and colored. Prefer `Text` for labels;
-`MathTex` needs a working TeX installation. Check the installed Manim API before
-using unfamiliar objects. Do not add plugins unless they serve a needed feature.
+Use React for layout and SVG for diagrams, plots, and geometric relationships.
+Scale layouts using `useVideoConfig()` rather than assuming a particular output
+resolution. Reserve the bottom 120 pixels of a 720p layout for captions. Prefer
+local assets and system fonts; load custom fonts before rendering. Explain the
+mechanism with actual intermediate states, rather than substituting text cards
+for a computation. The example in `assets/` demonstrates the contract; adapt
+both visuals and narration to the requested subject.
 
-## Render and review
+For unfamiliar APIs, use the installed source or official [Remotion documentation](https://www.remotion.dev/docs/).
 
-```bash
-npx --yes . render --project project.json --output video \
-  --python .venv/bin/python --quality m
-```
+## Render and verify
 
-Use `--quality l` for a quick 480p preview, `m` for 720p, or `h` for 1080p.
-Use a new output directory for each run. The command synthesizes or loads each
-spoken beat, measures it, renders the matching animations, merges narration,
-and assembles the scenes. It writes `explainer.mp4`, `explainer.srt`, and
-`manifest.json`, plus intermediate assets for inspection. Captions use measured
-beat times, and the manifest records scene references and durations.
+Quality presets are `l` (854×480), `m` (1280×720, default), and `h` (1920×1080),
+all at 30 fps. Use a new output directory for each run. The renderer bundles the
+scene module once, renders the complete timeline, and produces:
 
-Inspect the generated frames at key explanation steps and scene joins. Check
-that labels are readable, graphs and equations agree with the example, and
-objects do not overlap or clip. Listen to narration when tools permit it.
-Verify audio and video streams, caption timing, duration, and the paper's claims.
-Repair concrete errors in the authored project and render again.
+- `explainer.mp4` with narration and optional visible captions.
+- `explainer.srt` with captions following measured speech.
+- `manifest.json` with scene timing, source paths, and paper references.
+- `preview/` with opening, middle, and final frames.
+- `public/` with narration/assets and `bundle/` with the compiled composition.
 
-Deliver the narrated MP4 with its captions and reproducible source. Do not stop
-at the storyboard unless that is the requested deliverable. If rendering cannot
-be completed, preserve the project and report the specific missing capability.
+Inspect the previews plus important mechanism steps and scene joins. Check
+readability, clipping, overlapping labels, and caption space. Verify calculations
+and paper claims against the source, and confirm audio is present and non-silent.
+Listen when playback tools permit it. Repair concrete errors and render again.
+Deliver the MP4, captions, and authored project; finish rendering by default.
