@@ -17,7 +17,7 @@ An agent skill for Codex, Claude Code, and OpenCode.
 
 **A matrix moves the whole plane** - a 54-second narrated example with captions.
 
-![Animated preview of a matrix transforming a coordinate plane](docs/assets/linear-transformation.gif)
+https://github.com/user-attachments/assets/a7cc3739-8b2c-47f2-b9e9-79a04b4e8f7c
 
 Watch the basis vectors become matrix columns, the grid deform, and the output
 emerge from the same visual construction.
