@@ -31,8 +31,11 @@ Rendering needs Node.js 20+, ffmpeg, and ffprobe. Remotion obtains Headless Chro
 on first render if needed. Python is needed only for the optional paper ingestion
 helper. From a repository checkout, run `npm ci` and invoke the CLI with Node.
 
-Local narration uses macOS `say` or Linux `espeak-ng`/`espeak`; select a voice with
-`--voice`. To use recorded or externally generated narration, supply beat audio.
+Default macOS narration to the built-in `say` engine and the system's default
+voice: leave `--voice` unset and omit beat `audio` paths. The renderer already
+selects `say` first when available. Honor an explicit request for another voice
+with `--voice`, or supplied narration with beat `audio` paths. On Linux, local
+narration uses `espeak-ng`/`espeak`.
 Its spoken content must match `text`; the renderer measures audio rather than
 performing speech recognition. Use the requested language and spell symbols in
 spoken form so the speech engine pronounces them correctly.

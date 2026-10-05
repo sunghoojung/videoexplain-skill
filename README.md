@@ -44,8 +44,9 @@ npx --yes --package=github:sunghoojung/videoexplain-skill explain-concept render
 
 Remotion and React are installed with the package. Rendering needs `ffmpeg`
 and `ffprobe` on PATH. Remotion downloads Headless Chrome on the first render
-if needed. Local narration uses macOS `say` or Linux `espeak-ng`/`espeak`;
-provide an audio file per beat to use another voice. No separate model API or
+if needed. On macOS, narration defaults to `say` with the system's default voice;
+omit `--voice` to keep that default. Choose another voice or provide beat audio
+when explicitly requested. Linux uses `espeak-ng`/`espeak`. No separate model API or
 Manim environment is needed for video rendering.
 
 `render` measures speech, aligns beats to video frames, bundles React scenes

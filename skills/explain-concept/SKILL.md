@@ -63,8 +63,11 @@ slide template for every topic.
 
 Use the packaged CLI through npx so its Remotion and React dependencies are
 available. Check `doctor` before rendering.
-Use local speech synthesis or supplied narration audio. The CLI does not call a
-second language model; all explanation and code authoring happen in the agent.
+On macOS, default narration to the built-in `say` speech engine with the system's
+default voice. Omit `--voice` so the system selects it. Use another voice or
+supplied narration audio only when the user requests it or provides audio.
+On Linux, use the supported local speech engine. The CLI does not call a second
+language model; all explanation and code authoring happen in the agent.
 
 If a dependency is missing, complete the source and narration, resolve the
 specific missing dependency when authorized and feasible, and retry. If rendering
