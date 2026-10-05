@@ -1,6 +1,6 @@
 {
   "name": "videoexplain-skill",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Create original narrated explainer videos from research papers and concepts",
   "private": true,
   "license": "MIT",

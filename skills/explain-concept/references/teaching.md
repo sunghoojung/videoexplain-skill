@@ -47,6 +47,12 @@ A visual is useful if it lets the learner predict an outcome or see why a step
 works. Avoid diagrams that merely repeat the surrounding text. Do not force
 geometric metaphors onto topics whose mechanism is better explained verbally.
 
+For animated lessons, use [visual-reasoning.md](visual-reasoning.md) to turn
+this into a storyboard of computed state changes. Establish the object before
+its notation, preserve it through the operation, and use the result to motivate
+the formal rule. Connect equation terms to the objects with stable colors and
+labels instead of narrating over a static formula.
+
 ## Accuracy and depth review
 
 Before delivery, check:

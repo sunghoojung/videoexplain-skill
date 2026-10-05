@@ -7,6 +7,11 @@ one relationship or computation with a worked example and meaningful changes.
 Introduce symbols after establishing what they represent. For paper results,
 preserve units, experimental conditions, and source references.
 
+Use [visual-reasoning.md](visual-reasoning.md) to storyboard state changes,
+invariants, and the bridge from picture to notation before authoring scenes.
+The starter constructs a vector, transforms basis vectors and the whole plane,
+then derives matrix multiplication and area scaling from the same objects.
+
 Split narration into short beats corresponding to visible steps. Keep each
 beat concise enough to read as a caption, usually one or two sentences. Reduce
 scope to fit the requested duration instead of accelerating speech.
@@ -94,6 +99,15 @@ precisely timed visual changes. Animate through `useCurrentFrame`, `interpolate`
 and `spring`; CSS transitions, timers, and nondeterministic effects do not provide
 reliable frame-based rendering.
 
+For reusable geometry and timing, copy `assets/animation-kit.jsx` beside the
+scene module and import its helpers. `beatProgress(frame, beat, from, to)` uses
+fractions of the resolved beat duration and clamps before/after the window.
+`mixMatrix()` and `applyMatrix()` let a grid, vectors, and area share one state.
+`DrawPath` uses normalized SVG path length for deterministic reveals. `Arrow`
+computes its head geometrically, including very short vectors. `PlaneGrid`
+accepts a matrix and a coordinate mapping; clip it to the diagram viewport.
+These helpers are optional; use topic-specific geometry where it teaches better.
+
 Use React for layout and SVG for diagrams, plots, and geometric relationships.
 Scale layouts using `useVideoConfig()` rather than assuming a particular output
 resolution. Reserve the bottom 120 pixels of a 720p layout for captions. Prefer
@@ -116,7 +130,8 @@ scene module once, renders the complete timeline, and produces:
 - `preview/` with opening, middle, and final frames.
 - `public/` with narration/assets and `bundle/` with the compiled composition.
 
-Inspect the previews plus important mechanism steps and scene joins. Check
+Inspect the previews plus setup, midpoint, and result of each central mechanism
+and scene joins, as described in [visual-reasoning.md](visual-reasoning.md). Check
 readability, clipping, overlapping labels, and caption space. Verify calculations
 and paper claims against the source, and confirm audio is present and non-silent.
 Listen when playback tools permit it. Repair concrete errors and render again.

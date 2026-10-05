@@ -29,6 +29,12 @@ The default deliverable is a narrated video, captions, and reproducible React
 source. Ask for a written explanation or storyboard explicitly when desired.
 The active model authors the lesson; the CLI handles ingestion and rendering.
 
+Lessons build visual arguments: construct a concrete example, preserve objects
+through mathematical transformations, and connect geometry to colored equation
+terms. For 3Blue1Brown-inspired learning, the skill guides storyboarding,
+prediction moments, linked representations, and review of intermediate frames.
+See the [visual reasoning guide](skills/explain-concept/references/visual-reasoning.md).
+
 ## Render with npx
 
 ```bash
@@ -56,6 +62,12 @@ npm ci
 node skills/explain-concept/scripts/explain-concept.mjs render \
   --project skills/explain-concept/assets/project.example.json --output video
 ```
+
+The starter constructs a vector from basis directions, records their
+destinations as matrix columns, deforms the whole plane, and derives the output
+and area scale. `animation-kit.jsx` provides reusable frame-based timing and SVG
+geometry helpers; adapt the example to the concept rather than reusing its layout
+for every lesson.
 
 ## Read a paper
 

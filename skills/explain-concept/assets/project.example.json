@@ -1,21 +1,27 @@
 {
-  "title": "Gradient descent on a simple bowl",
+  "title": "A matrix moves the whole plane",
   "source": "scenes.example.jsx",
   "scenes": [
     {
-      "name": "GradientDescent",
+      "name": "LinearTransformation",
       "beats": [
         {
-          "text": "How can we find the bottom of a curve? Start at x equals three on the bowl y equals x squared. Its height is nine."
+          "text": "What does a matrix do to this arrow? Its coordinates, two and one, mean two steps across and one step up."
         },
         {
-          "text": "The slope here is six. With a step size of one quarter, subtract one quarter times six. Our next position is one point five, and the height drops to two point two five."
+          "text": "Call the two unit directions e one and e two. Our arrow is two copies of e one, plus one copy of e two."
         },
         {
-          "text": "Now the slope is three. Apply the same rule again: one point five minus one quarter times three gives zero point seven five. Each step follows the local slope downhill."
+          "text": "Choose a transformation. Send e one to two, one. Send e two to one, two. Those destinations become the two columns of our matrix."
         },
         {
-          "text": "The update rule is x next equals x minus alpha times the derivative. On this simple bowl, our chosen step size moves us toward zero. Larger steps can overshoot, and general functions can have other local minima."
+          "text": "Where will our original arrow land? Watch the whole grid transform. The arrow and the unit square follow the same map."
+        },
+        {
+          "text": "Keep the same recipe in the new directions. Two copies of two, one, plus one copy of one, two. Add the contributions: the result is five, four."
+        },
+        {
+          "text": "The unit square now has area three. The determinant gives that signed area scale. A linear map fixes the origin and keeps parallel lines parallel."
         }
       ],
       "references": []
