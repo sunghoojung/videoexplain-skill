@@ -1,62 +1,107 @@
-# VideoExplain Skill
+<div align="center">
 
-Turn a research paper or concept into an original narrated explainer video.
-Adapted from [PaperExplainAgent](https://github.com/mihirballari/PaperExplainAgent).
+# VideoExplain
 
-The agent reads the material, writes the lesson and React scenes, then renders
-an MP4 with Remotion. Narration is measured before rendering so scene changes
-and captions follow the spoken explanation.
+**Turn research papers and concepts into narrated visual explanations.**
+
+An agent skill for Codex, Claude Code, and OpenCode.
+
+[![Node.js 20+](https://img.shields.io/badge/Node.js-20%2B-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![MIT License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+
+[Demo](#demo) · [Install](#install) · [Usage](#usage) · [How it works](#how-it-works)
+
+</div>
+
+## Demo
+
+**A matrix moves the whole plane** - a 54-second narrated example with captions.
+
+https://github.com/user-attachments/assets/a7cc3739-8b2c-47f2-b9e9-79a04b4e8f7c
+
+Watch the basis vectors become matrix columns, the grid deform, and the output
+emerge from the same visual construction.
+
+[Animation source](skills/explain-concept/assets/scenes.example.jsx) · [Narration script](skills/explain-concept/assets/project.example.json)
 
 ## Install
 
 ```bash
-npx --yes --package=github:sunghoojung/videoexplain-skill explain-concept install --replace
+npx --yes --package=github:sunghoojung/videoexplain-skill \
+  explain-concept install --replace
 ```
 
-The default target is Codex. Use `--agent claude`, `--agent opencode`, or
-`--path /path/to/skills` for another target. Updates retain the previous skill
-as a backup. Node.js 20+ is required.
+Installs `$explain-concept` for Codex. Updates preserve the previous installation
+as a backup.
 
-## Ask the agent
+**Requirements:** Node.js 20+, `ffmpeg`, and `ffprobe`. React and Remotion come
+with the package; Headless Chrome downloads on the first render when needed.
+
+On macOS, narration uses built-in `say` with your system's default voice. Linux
+uses `espeak-ng` or `espeak`. You can request another voice or supply narration audio.
+
+## Usage
+
+Ask your agent:
 
 ```text
 Use $explain-concept to turn this paper.pdf into a narrated explainer video.
-Use $explain-concept to make a two-minute video explaining gradient descent.
-Use $explain-concept to animate this paper's main contribution: <paper URL>.
 ```
 
-The default deliverable is a narrated video, captions, and reproducible React
-source. Ask for a written explanation or storyboard explicitly when desired.
-The active model authors the lesson; the CLI handles ingestion and rendering.
+```text
+Use $explain-concept to make a two-minute video explaining gradient descent
+with geometric intuition and a worked example.
+```
 
-Lessons build visual arguments: construct a concrete example, preserve objects
-through mathematical transformations, and connect geometry to colored equation
-terms. For 3Blue1Brown-inspired learning, the skill guides storyboarding,
-prediction moments, linked representations, and review of intermediate frames.
-See the [visual reasoning guide](skills/explain-concept/references/visual-reasoning.md).
+The default result is a **narrated MP4, captions, and reproducible animation source**.
+You can also request a storyboard or written explanation.
 
-## Render with npx
+## How it works
+
+1. **Understand the idea.** Read the source and choose a small worked example.
+2. **Make the reasoning visible.** Build and transform objects, preserve their
+   identity, and connect geometry to equations with consistent colors.
+3. **Render and review.** Measure narration, align animation to speech, and inspect
+   intermediate frames for mathematical accuracy and visual clarity.
+
+The active agent writes the explanation and React/SVG scenes. The CLI renders
+with Remotion. Lessons emphasize 3Blue1Brown-inspired visual intuition and
+purposeful motion.
+
+[Teaching method](skills/explain-concept/references/teaching.md) · [Visual reasoning](skills/explain-concept/references/visual-reasoning.md) · [Project format](skills/explain-concept/references/animated-video.md)
+
+<details>
+<summary><strong>Other agents and custom install locations</strong></summary>
+
+```bash
+npx --yes --package=github:sunghoojung/videoexplain-skill \
+  explain-concept install --agent claude --replace
+
+npx --yes --package=github:sunghoojung/videoexplain-skill \
+  explain-concept install --agent opencode --replace
+```
+
+Use `--path /path/to/skills` to choose another installation directory.
+
+</details>
+
+<details>
+<summary><strong>CLI and local development</strong></summary>
+
+Check dependencies and render an authored project:
 
 ```bash
 npx --yes --package=github:sunghoojung/videoexplain-skill explain-concept doctor
-npx --yes --package=github:sunghoojung/videoexplain-skill explain-concept render --project project.json --output video
+
+npx --yes --package=github:sunghoojung/videoexplain-skill \
+  explain-concept render --project project.json --output video
 ```
 
-Remotion and React are installed with the package. Rendering needs `ffmpeg`
-and `ffprobe` on PATH. Remotion downloads Headless Chrome on the first render
-if needed. On macOS, narration defaults to `say` with the system's default voice;
-omit `--voice` to keep that default. Choose another voice or provide beat audio
-when explicitly requested. Linux uses `espeak-ng`/`espeak`. No separate model API or
-Manim environment is needed for video rendering.
+Choose `--quality l`, `m`, or `h` for 480p, 720p, or 1080p. Use `--voice` only
+when choosing a different local voice. See the [project format](skills/explain-concept/references/animated-video.md)
+for supplied audio, captions, and scene timing. Use a new or empty output directory.
 
-`render` measures speech, aligns beats to video frames, bundles React scenes
-once, and renders the complete narrated video. It writes `explainer.mp4`,
-`explainer.srt`, a source-reference manifest, and three preview frames. Captions
-are also visible in the video unless the project sets `captions` to `false`.
-Output is published only after success; existing output is preserved.
-
-Use `guide --mode production --full` for the project format and authoring
-contract. The runnable starter is in `skills/explain-concept/assets/`:
+Run the included example from a checkout:
 
 ```bash
 npm ci
@@ -64,30 +109,22 @@ node skills/explain-concept/scripts/explain-concept.mjs render \
   --project skills/explain-concept/assets/project.example.json --output video
 ```
 
-The starter constructs a vector from basis directions, records their
-destinations as matrix columns, deforms the whole plane, and derives the output
-and area scale. `animation-kit.jsx` provides reusable frame-based timing and SVG
-geometry helpers; adapt the example to the concept rather than reusing its layout
-for every lesson.
-
-## Read a paper
-
-PDF ingestion uses Python 3.11+ with pypdf. This optional helper is independent
-of video rendering. Existing document tools can also read the paper.
+PDF ingestion is optional and needs Python 3.11+ with `pypdf`:
 
 ```bash
 uv venv --python 3.12 .venv
 uv pip install --python .venv/bin/python -r skills/explain-concept/requirements.txt
-npx --yes --package=github:sunghoojung/videoexplain-skill explain-concept ingest \
-  --paper paper.pdf --output paper-source --python .venv/bin/python
+npx --yes --package=github:sunghoojung/videoexplain-skill \
+  explain-concept ingest --paper paper.pdf --output paper-source \
+  --python .venv/bin/python
 ```
 
-`ingest` writes page-indexed paper text and optional previews when Poppler is
-available. Inspect important equations and figures in the original document.
-Every command supports `--help`; results use JSON on stdout and diagnostics
-use stderr.
+Every command supports `--help`. Results use JSON on stdout; diagnostics use stderr.
 
-## License
+</details>
 
-Skill code: MIT. [Remotion has its own license terms](https://www.remotion.dev/license).
+## Credits and license
+
+Adapted from [PaperExplainAgent](https://github.com/mihirballari/PaperExplainAgent).
+Skill code is [MIT licensed](LICENSE); [Remotion has separate license terms](https://www.remotion.dev/license).
 See [provenance](skills/explain-concept/references/provenance.md).
