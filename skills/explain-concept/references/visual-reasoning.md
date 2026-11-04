@@ -1,125 +1,107 @@
 # Animation as a visual argument
 
-Read this when planning or reviewing an animated lesson, especially when the
-user requests 3Blue1Brown-style visual learning. Use the teaching principles:
-concrete examples, geometric intuition, continuity, and motion that explains a
-relationship. Author an original lesson and its own visual identity.
+Read this when storyboarding or reviewing a lesson. The animation is not
+decoration around the narration: it is the argument. With the sound off, a
+viewer should still see what changed and why the result follows.
 
 ## Storyboard the reasoning before writing scene code
 
 Find the operation the learner cannot yet picture. Choose a small example whose
-state changes can be computed exactly. Describe each mechanism beat in this form:
+states can be computed exactly. Describe each beat like this:
 
-| Beat | Initial picture | Operation and visible change | What the learner can infer |
+| Beat | Starting picture | What moves | What the viewer can now infer |
 | --- | --- | --- | --- |
-| Build | Arrow at (2, 1) on a plane | Construct two horizontal unit arrows and one vertical unit arrow | Coordinates are a linear combination of basis directions |
-| Specify | Two unit basis vectors | Move their tips to (2, 1) and (1, 2); connect their colors to matrix columns | Columns record where the basis vectors land |
-| Predict and apply | Original grid and input arrow; faint destination markers | Briefly hold the question, then transform grid, square, and arrow by the same map | The matrix acts on the whole space, not only a list of numbers |
-| Derive | Transformed input arrow | Reconstruct two copies of the first transformed basis vector plus one of the second | (5, 4) comes from the same combination in the new directions |
-| Generalize | Unit square and its transformed parallelogram | Highlight area and connect it to the determinant | This example scales signed area by three |
+| Hook | A 3-by-3 square showing its 9 unit squares | Each side stretches by 0.1; a "?" asks how much area was added | Something was added; the viewer guesses |
+| Pieces | The grown square | The new area separates into two strips and a corner | The new area has a structure |
+| Compute | Separated pieces | Each piece gets its own labeled product | Strips add 0.3 each; the corner only 0.01 |
+| Aha | Pieces reassembled; a table of nudges | The nudge shrinks; zoom in on the corner | The corner vanishes much faster than the strips |
+| Generalize | Live readout | The side changes; the readout follows | Area per nudge is always two sides' worth |
+| Formula | Diagram plus a plain-word equation | Each phrase becomes its symbol, in the equation and the picture | The notation is a name for what we saw |
 
-This is a worked example, not a required sequence for all topics. For a research
-paper, show the baseline and new method on the same input and visual scale.
-Mark illustrative geometry or synthetic data when it is not the paper's actual
-mechanism or evidence. Avoid inventing a geometric interpretation for an abstract
-embedding just because it is easy to draw arrows.
+This is the shipped example lesson, not a template every topic must follow.
+For a research paper, show the baseline and the new method on the same input at
+the same scale. Mark schematic geometry or synthetic data when it is not the
+paper's actual mechanism or evidence. Do not invent a geometric picture for an
+abstract embedding just because arrows are easy to draw.
 
-Write narration from the storyboard. Each spoken claim should have a visible
-referent at that moment. Divide narration when the viewer needs to inspect an
-intermediate state. Introduce notation after the corresponding object exists.
+Write narration from the storyboard. Each spoken claim needs a visible referent
+at that moment. Split a beat when the viewer needs to inspect an intermediate
+state. Introduce notation only after its object exists on screen.
 
 ## Choose a motion that carries the explanation
 
-| Relationship to teach | Useful construction | Check for correctness |
+| Relationship to teach | Useful construction | Correctness check |
 | --- | --- | --- |
-| Linear transformation | Deform a coordinate grid while basis vectors, sample vectors, and a unit square move together | Apply the same matrix to every point; keep the origin fixed and parallel lines parallel |
-| Derivative or optimization | Shrink a secant toward a tangent; mark rise/run; link slope, step size, and the next iterate | Compute from the function; distinguish discrete algorithm steps from an interpolated motion guide |
-| Integral or expectation | Build rectangles or probability-weighted contributions, then collect their sum | Areas or weights use the same units and normalization as the equation |
-| Attention or message passing | Reveal actual scores, normalize weights, then combine value vectors with visible weighted contributions | Scores, weights, and weighted sums agree; a 2D picture of latent vectors is illustrative |
-| Algorithm or recursion | Follow individual input objects through intermediate states; retain eliminated candidates as ghosts | Visible state follows the actual algorithm, including the stopping condition |
-| Probability or evidence | Track probability mass as assumptions or observations change; compare before and after on fixed axes | Do not suggest an unproved causal relationship or use unseeded random samples |
-| Parameter sensitivity | Change one labeled parameter and update dependent geometry and readouts together | Keep comparison scales fixed and show valid limits or a meaningful failure case |
+| Linear transformation | Deform a grid while basis vectors, a sample vector, and a unit square move together | Apply the same matrix to every point; the origin stays fixed and parallel lines stay parallel |
+| Derivative or rate | Nudge an input and show the resulting change (new area, rise over run); shrink the nudge | Compute values from the function; separate the discrete nudge from the limit |
+| Integral or expectation | Build rectangles or weighted contributions, then collect their sum | Areas and weights use the same units and normalization as the equation |
+| Attention or message passing | Reveal actual scores, normalize them, then combine values with visible weights | Scores, weights, and sums agree; a 2D picture of latent vectors is illustrative |
+| Algorithm or recursion | Follow individual inputs through states; keep eliminated candidates as ghosts | The visible state follows the real algorithm, including its stopping condition |
+| Probability or evidence | Track probability mass (or counts of people) as observations arrive | Fixed axes before and after; no implied causation; seeded randomness |
+| Parameter sensitivity | Change one labeled parameter and update dependent geometry and readouts together | Fixed comparison scales; show valid limits or a meaningful failure |
 
-Use path drawing to establish an object, an anchored transformation to preserve
-identity, a trace or ghost to compare states, and a color-linked equation to
-bridge geometry and symbols. These are choices, not an animation quota. A motion
-that merely slides a heading or fades a paragraph does not explain the mechanism.
+Use drawing to establish an object, an anchored transformation to preserve its
+identity, a ghost or trace to compare states, and color-linked labels to bridge
+the picture and the symbols. A heading that slides in or a paragraph that fades
+does not explain anything.
+
+## Equations are visual objects too
+
+- Give every quantity one color and keep it everywhere: in the picture, in
+  plain-word labels, in symbols, and across scenes. Pair color with a label so
+  color is never the only cue.
+- Place labels beside the objects they name. A brace with a short plain-word
+  label beats a legend.
+- Build equations piece by piece, and link each new piece to its object at the
+  moment it appears (highlight both together).
+- Transform symbols only when their identity is real: the same glyph moving to
+  a new position, or a word becoming the symbol that names it. Never morph one
+  equation into an unrelated one, which suggests a false equality.
+- While discussing one term, dim the others. When the build is finished, keep
+  the picture on screen beside it.
+- Use real typesetting (LaTeX) for math and a matching serif for words in
+  equations. Avoid walls of text: a label is a few words.
 
 ## Compose for seeing and thinking
 
-- Give the main diagram most of the usable frame. Remove persistent oversized
-  titles, decorative panels, and prose that compete with it.
-- Define semantic colors and keep them across geometry, labels, equation terms,
-  and scenes. Also use labels or line styles so color is not the only cue.
+- Give the main picture most of the frame. Avoid persistent titles, decorative
+  panels, and prose that compete with it.
 - Keep the reference frame stable during comparisons. Move the camera only to
-  reveal a relevant scale or detail; preserve context with axes or a faint ghost.
-- Reveal one relationship at a time. Establish the objects, perform the change,
-  then hold the result long enough to inspect it. Keep the result on screen while
-  introducing the notation that explains it.
-- Prefer labels beside the objects they name. Use leaders or separate annotations
-  when transformed objects converge; check moving labels between endpoints too.
-- Use real mathematical typesetting or well-spaced SVG symbols for equations.
-  Color corresponding terms; transform matching tokens only when their identity
-  is valid. Do not morph unrelated equations into apparent equalities.
-- Reserve caption space. Long narration beats can make captions taller than the
-  nominal safe area; shorten or split them before compressing the diagram.
+  reveal a relevant scale or detail, such as zooming in to show that a corner
+  has become a speck, then return.
+- Reveal one relationship at a time: set up the objects, perform the change,
+  then hold the result long enough to look at it.
+- Check moving labels at the start, middle, and end of each motion, and wherever
+  objects converge.
 
-More motion is not automatically better. Slow or hold the important operation;
-keep setup transitions brief. Use smooth easing for attention, but derive the
-displayed state from the mathematical model. A spring that makes a probability
-negative, overshoots a final iterate, or inverts a matrix is misleading.
+More motion is not better. Slow down for the important operation; keep setup
+quick. Ease motion for attention, but compute every displayed state from the
+mathematical model. An overshoot that makes a probability negative, or an
+interpolated matrix that silently passes through a singular map, is misleading.
 
 ## Implement reproducibly
 
-The existing renderer supports React and SVG, so rich mathematical animation
-does not require changing engines. Copy `assets/animation-kit.jsx` beside the
-authored scene if useful. It includes beat-relative progress, vector arithmetic,
-coordinate mapping, path drawing, arrowheads, and a transformable grid. The
-starter shows how to connect these pieces into a coherent lesson.
-
-Compute all visual properties from the current frame and the same state model:
-geometry, numbers, labels, and equations must not have independent timelines.
-Anchor timing to resolved narration beats, leaving setup and a readable hold.
-Split a beat when several distinct operations need their own spoken timing.
-Avoid CSS transitions, timers, network-dependent assets, and random render state.
-
-For a linear map, an interpolation such as A(t) = (1-t)I + tA is a family of
-intermediate maps, not a claim that the final transformation happens in physical
-time. Some choices of A make this path singular or reverse orientation. Check
-that behavior rather than silently treating an interpolation as a rotation.
-
-Manim can be appropriate when the user requests it or an existing project uses
-it. Do not switch engines merely to imitate a channel: the visual argument,
-mathematical fidelity, and pacing are the parts the viewer learns from.
+Drive geometry, numbers, labels, and equations from one shared state (for
+example, Manim `ValueTracker`s with `always_redraw`), so they cannot drift
+apart. Time animations to the measured narration beats, not to guessed seconds.
+Avoid unseeded randomness and network-dependent assets. Engine specifics are in
+[manim.md](manim.md) (default) and [remotion.md](remotion.md).
 
 ## Review the actual video
 
-Render a representative mechanism before expanding a long video. For every
-central operation, inspect its setup, a midpoint, its result, and nearby beat
-joins. Use additional stills or a frame strip from the MP4; the renderer's three
-default previews are only an initial check. Review at the intended viewing size.
+Render a central scene before writing the whole video. Inspect the render's
+`preview/contact-sheet.png` to scan every beat's final state, the per-beat
+middle and final frames, and extra frames during central transformations.
+Review at the intended size.
 
-Check these observable outcomes:
+- With the sound off, the main relationship is still visible.
+- The viewer can tell what moved, what stayed fixed, and why the result follows.
+  A prediction moment holds before the reveal.
+- Geometry, numbers, and colored terms agree at intermediate frames.
+- No collisions, clipping, unreadable math, garbled morphs, flicker, or abrupt
+  replacements.
+- No formula appears before its idea has been shown.
+- Speech matches the visible operation and leaves time to see the result.
 
-- Muted playback still shows the main relationship. Labels can name objects,
-  but prose is not carrying all the reasoning.
-- The viewer can identify what moved, what stayed invariant, and why the result
-  follows. A prediction moment, when useful, holds before revealing the answer.
-- Geometry, numeric examples, units, and colored equation terms agree at
-  intermediate frames as well as endpoints.
-- No label collisions, clipped arrowheads, unreadable math, caption overlap,
-  flicker, or abrupt object replacements occur during a transformation.
-- A sweep or comparison actually demonstrates sensitivity, an invariant, or a
-  limit. It is not an unlabelled decorative loop.
-- Spoken timing matches the visible operation and gives the viewer time to see
-  the result. If a dense beat rushes, split it and remeasure speech.
-
-Repair the specific failure and render again. Do not approve a lesson merely
-because an MP4 exists or because all objects animate.
-
-## Teaching reference
-
-[3Blue1Brown's explanation of its teaching and animation approach](https://www.3blue1brown.com/about/)
-emphasizes examples before abstraction and deliberate motion that reinforces
-the narration. The guidance above applies those principles to this skill's
-renderer; it is not an official 3Blue1Brown template.
+Repair the specific failure and render again. An MP4 existing, or every object
+animating, is not approval.

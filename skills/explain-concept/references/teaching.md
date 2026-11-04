@@ -1,68 +1,141 @@
-# Teaching method
+# Teaching method: intuition first
 
-## Find the conceptual bottleneck
+This is the heart of the skill. A good lesson makes the viewer curious, lets
+them discover the idea through a small concrete case, shows *why* it works with
+a picture that moves, and only then gives the idea its notation. The formula is
+a compact name for something the viewer already understands, never the thing
+they are asked to understand.
 
-Identify what a learner must understand to make the next step feel justified.
-Teach that relationship, rather than listing everything associated with the
-topic. For an unfamiliar concept, name the prerequisite in one sentence and
-explain it in place if it is essential.
+These principles are inspired by
+[3Blue1Brown's approach](https://www.3blue1brown.com/about/): examples before
+abstraction, discovery over announcement, and motion that carries the argument.
+Author an original lesson; do not imitate a specific video, its characters, or
+its branding.
 
-Match the route to the topic:
+## Plan the lesson first
 
-- Mathematics: specific numerical or geometric example, changing one quantity,
-  underlying invariant, formal definition or derivation, conditions of validity.
-- Algorithms and software: tiny input, state changes, output, invariant or
-  mechanism, scaling and failure conditions.
-- Science: observation, proposed mechanism, prediction, evidence, limitations.
-- Research: problem, previous approach, new mechanism, evidence supporting the
-  contribution, limitations. A proposed mechanism is not an established result.
-- Everyday concepts: familiar situation, cause and effect, transferable rule,
-  case where the rule needs qualification.
+Write `lesson-plan.md` before narration or code. Every later decision follows
+from it.
 
-## Concrete before abstract
+```markdown
+Insight: one sentence a curious teenager would understand, no jargon.
+Hook: the concrete question the video opens with and answers by the end.
+Worked example: the small case, with its actual numbers.
+Aha: the visual transformation that makes the insight click.
+Formula: first symbol appears at beat N. Pieces in plain words:
+  - "the extra area" -> d(x^2)
+  - "the nudge" -> dx
+Limits: where the idea stops working, or what to try next.
+```
 
-Choose an example small enough that the learner can follow every step. Keep it
-through the explanation so the notation and the intuition refer to the same
-objects. Introduce one new relation at a time. For a quantitative explanation,
-show actual values and compute the outcome, not just a formula.
+If you cannot write the insight sentence without notation, you do not yet have
+the intuition to teach. Work it out first: why is it true, what would break it,
+how would someone have discovered it?
 
-For example, binary search on eight sorted items shrinks the remaining candidates
-to at most four, two, then one. Use that repeated halving to motivate logarithmic
-scaling. Explain that finding a particular item may finish earlier and that the
-sorted-input assumption matters. Do not generalize it to unsorted search.
+## The arc of a lesson
 
-Use analogy to open the door, then describe the actual mechanism. For attention,
-a relevance-weighted lookup can help, but clarify that learned scores and
-normalized weights are computations, not human intention or guaranteed truth.
+| Part | Share | What happens |
+| --- | --- | --- |
+| Hook | 5-10% | A concrete question, puzzle, or surprising fact on screen. No definitions. |
+| Play | 25-35% | The smallest example, with real numbers the viewer can check by eye. Ask them to predict, pause, then show. |
+| Aha | 15-25% | Transform the picture so the pattern becomes obvious: shrink something, rearrange, compare, vary one parameter. |
+| Generalize | 10-20% | Change the example; the pattern survives. Name the pieces in plain words. |
+| Formula | 10-20% | Words become symbols one at a time, linked to the picture. Plug the example back in. |
+| Insight | 5-10% | Restate the idea as a picture, note its limits, or invite the viewer to try a new case. |
 
-## Visual reasoning
+Adapt the proportions, not the order. For a paper, the arc becomes problem,
+baseline, new mechanism on a worked example, evidence, and limits, and the
+mechanism still comes before its equation.
 
-Use a stable visual mapping: the same quantity should keep the same label and
-color across examples, equations, and diagrams. Pair color with labels or shape.
-Changing an input should visibly change the correct dependent quantity.
-Preserve object identity across transformations only when the mathematical or
-causal relationship supports it; a decorative morph can teach a false equivalence.
+## Choose the example
 
-A visual is useful if it lets the learner predict an outcome or see why a step
-works. Avoid diagrams that merely repeat the surrounding text. Do not force
-geometric metaphors onto topics whose mechanism is better explained verbally.
+Find the conceptual bottleneck: the one relationship that, once seen, makes the
+rest feel inevitable. Teach that, not a tour of everything related.
 
-For animated lessons, use [visual-reasoning.md](visual-reasoning.md) to turn
-this into a storyboard of computed state changes. Establish the object before
-its notation, preserve it through the operation, and use the result to motivate
-the formal rule. Connect equation terms to the objects with stable colors and
-labels instead of narrating over a static formula.
+- Mathematics: a specific numeric or geometric case, then vary one quantity,
+  find the invariant, and only then state the rule and its conditions.
+- Algorithms: a tiny input, its state at each step, the invariant, then scaling
+  and failure cases.
+- Science: an observation, a proposed mechanism, a prediction, the evidence.
+- Research papers: the problem, what the previous approach did on one input,
+  what the new mechanism does on the same input, the evidence, the limits.
+- Everyday ideas: a familiar situation, cause and effect, the transferable rule.
+
+Keep the example small enough that every step can be checked by eye, and keep
+it through the whole video so the intuition and the eventual notation refer to
+the same objects. Use round numbers (3 and 0.1, not 2.7 and 0.13) unless the
+specific value matters. Clearly label illustrative values as illustrative.
+
+An analogy can open the door, but then show the actual mechanism. For
+attention, "relevance-weighted lookup" helps, but the scores and weights are
+computations, not intentions.
+
+## The formula reveal
+
+Most explainers fail here: they show the equation, then explain it symbol by
+symbol. Reverse that. By the time a formula appears, the viewer should already
+know what it says.
+
+1. **Earn it.** The formula appears only after the viewer has seen the
+   relationship work in the example. Usually that is in the final third.
+2. **Words first.** Write the relationship on screen in plain words, each
+   phrase colored like the object it describes:
+   `new area ÷ nudge ≈ 2 × side`.
+3. **One symbol per beat.** Swap one phrase for its symbol at a time, and
+   change its label in the picture at the same moment (`side` becomes `x`
+   in both places). The narration says what the piece *means*.
+4. **Keep the picture on screen.** While a term is discussed, highlight its
+   object (circumscribe, indicate, or dim everything else).
+5. **Assemble the familiar form last.** Rearrange the pieces into the standard
+   notation (for example, stack `d(x²) ÷ dx` into a fraction), with each glyph
+   moving to its new place rather than the equation being swapped wholesale.
+6. **Plug the example back in.** Show that the formula reproduces the numbers
+   the viewer already computed by hand.
+
+For a long formula, name chunks before symbols. Put a brace with a plain-word
+label under each chunk ("how surprised we are", "averaged over the data") and
+build it across several beats. More than about five new symbols at once is too
+many. If the topic *is* a formula (Bayes' theorem, a loss function), still open
+with a concrete scenario (a test given to 1,000 people), work it with counts,
+and let the formula summarize the counting.
+
+## Narration: write for the ear
+
+Narration is heard and also shown as subtitles, so it carries meaning, while
+notation lives on screen. Run `explain-concept lint` and rewrite flagged beats.
+
+| Reads notation aloud (avoid) | Explains meaning (do this) |
+| --- | --- |
+| "d of x squared over d x equals two x" | "For every bit of nudge, the area grows by two sides' worth." |
+| "the sum from i equals one to n of x sub i" | "Add up every measurement." |
+| "the gradient of L with respect to theta" | "the direction that makes the error grow fastest" |
+| "P of A given B equals P of B given A times P of A over P of B" | "Of everyone who tests positive, what fraction is actually sick?" |
+
+- Introduce a symbol by name once ("we write the nudge with a little d in
+  front"), then refer to it by what it means.
+- Speak to the viewer: "you", "we", "notice", "what if". Ask real questions,
+  then pause before answering.
+- One or two short sentences per beat, about 40 words at most. Each beat should
+  match one visible change.
+- Say results, not arithmetic chains. Numbers are fine; strings of operations
+  are not.
+- Avoid "In this video we will...", lists of definitions, and filler like
+  "simply", "obviously", or "it is easy to see".
+- Spell out anything the speech engine might mispronounce, and keep symbol
+  characters out of beat text entirely.
 
 ## Accuracy and depth review
 
 Before delivery, check:
 
-- Does the explanation say why or how, as well as what?
-- Do the example, notation, and visual mapping agree?
-- Are the relevant assumptions explicit, including where the rule stops working?
-- Are measurement, causal inference, speculation, and analogy distinguished?
-- Can the learner use the takeaway on a new example?
+- Does the video say *why* and *how*, not only *what*?
+- Is there any formula on screen before the viewer has seen the idea work?
+- Could a viewer state the insight in their own words without the formula?
+- Do the example, the picture, and the notation agree, including intermediate
+  states?
+- Are assumptions explicit, including where the rule stops working?
+- Are measurement, causal claims, speculation, and analogy distinguished?
+- Can the viewer apply the idea to a new case?
 
-A brief prediction or comprehension question can be useful when requested or
-when it resolves a misconception. Do not append quizzes or recap sections to
-every answer. Adapt the length to the user's request.
+A prediction question is valuable when it creates curiosity or resolves a
+misconception. Do not append quizzes or recap lists to every lesson.

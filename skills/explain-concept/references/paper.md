@@ -44,3 +44,9 @@ The teaching sequence usually follows problem, baseline, new mechanism, worked
 example, evidence, and limits. Give the mechanism most of the time. The video
 should help the viewer understand the paper, rather than narrate its section
 headings. Adapt this sequence when a derivation or experiment needs another order.
+
+Papers lead with equations; the video should not. Show the mechanism working on
+the small example first, then introduce the paper's key equation as a summary of
+what the viewer just watched, built one named chunk at a time as described in
+[teaching.md](teaching.md). Show only the equations the explanation needs, in
+the paper's notation once they appear, and cite where each one comes from.

@@ -1,7 +1,7 @@
 {
   "name": "videoexplain-skill",
-  "version": "0.5.1",
-  "description": "Create original narrated explainer videos from research papers and concepts",
+  "version": "0.6.0",
+  "description": "Create intuition-first narrated explainer videos from research papers and concepts with Manim",
   "private": true,
   "license": "MIT",
   "repository": {
@@ -21,9 +21,11 @@
     "skills/explain-concept/scripts/*.py",
     "README.md",
     "LICENSE",
-    "skills/explain-concept/assets/*.json",
     "skills/explain-concept/requirements.txt",
-    "skills/explain-concept/assets/*.jsx"
+    "skills/explain-concept/assets/remotion/*.json",
+    "skills/explain-concept/assets/remotion/*.jsx",
+    "skills/explain-concept/assets/manim/*.json",
+    "skills/explain-concept/assets/manim/*.py"
   ],
   "engines": {
     "node": ">=20"

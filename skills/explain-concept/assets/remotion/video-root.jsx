@@ -2,9 +2,7 @@ import React from "react";
 import {
   AbsoluteFill,
   Composition,
-  Html5Audio,
   Sequence,
-  staticFile,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
@@ -68,7 +66,6 @@ function Video({ timeline, components }) {
           </Sequence>
         );
       })}
-      <Html5Audio src={staticFile(timeline.audio)} />
       {timeline.captions && <Caption scenes={timeline.scenes} />}
     </AbsoluteFill>
   );
