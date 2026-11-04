@@ -60,7 +60,8 @@ package manager (see [Manim's installation guide](https://docs.manim.community/e
 **2. Install Manim once, for every project:**
 
 ```bash
-npx --yes --package=github:sunghoojung/videoexplain-skill explain-concept setup
+npx --yes --package=github:sunghoojung/videoexplain-skill \
+  explain-concept setup
 ```
 
 `setup` creates a shared Python environment at
@@ -73,7 +74,9 @@ is small and needs no admin rights; MacTeX, BasicTeX, and TeX Live also work.
 Then add the packages Manim uses:
 
 ```bash
-tlmgr install standalone preview doublestroke ms setspace rsfs relsize ragged2e fundus-calligra microtype wasysym physics dvisvgm jknapltx wasy cm-super babel-english gnu-freefont mathastext cbfonts-fd
+tlmgr install standalone preview doublestroke ms setspace rsfs relsize \
+  ragged2e fundus-calligra microtype wasysym physics dvisvgm jknapltx wasy \
+  cm-super babel-english gnu-freefont mathastext cbfonts-fd
 ```
 
 If `tlmgr` is not on your `PATH`, run it from TinyTeX's `bin` folder (for example `~/Library/TinyTeX/bin/universal-darwin/tlmgr`). The renderer finds TinyTeX and MacTeX even when they are not on your `PATH`.
@@ -81,7 +84,8 @@ If `tlmgr` is not on your `PATH`, run it from TinyTeX's `bin` folder (for exampl
 **4. Install the skill** for your agent:
 
 ```bash
-npx --yes --package=github:sunghoojung/videoexplain-skill explain-concept install --agent claude --replace
+npx --yes --package=github:sunghoojung/videoexplain-skill \
+  explain-concept install --agent claude --replace
 ```
 
 Use `--agent codex` (the default) or `--agent opencode` for other agents, or
@@ -91,7 +95,8 @@ as a backup.
 **5. Check everything:**
 
 ```bash
-npx --yes --package=github:sunghoojung/videoexplain-skill explain-concept doctor
+npx --yes --package=github:sunghoojung/videoexplain-skill \
+  explain-concept doctor
 ```
 
 `doctor` reports each dependency and prints the exact command for anything
