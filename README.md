@@ -51,12 +51,14 @@ On macOS, a typical setup is:
 
 ```bash
 brew install cairo pango pkg-config ffmpeg
-uv venv --python 3.12 .venv
-uv pip install --python .venv/bin/python manim pypdf
+npx --yes --package=github:sunghoojung/videoexplain-skill explain-concept setup
 ```
 
-Install TinyTeX (no sudo) from [yihui.org/tinytex](https://yihui.org/tinytex/)
-plus the LaTeX packages `doctor` lists. The React/Remotion engine needs only
+`setup` installs Manim and pypdf into one shared environment
+(`~/.local/share/explain-concept/venv`) that every project and agent session
+finds automatically. Install TinyTeX (no sudo) from
+[yihui.org/tinytex](https://yihui.org/tinytex/) plus the LaTeX packages `doctor`
+lists. The React/Remotion engine needs only
 Node.js and ffmpeg.
 
 On macOS, narration uses built-in `say` with your system's default voice. Linux
@@ -129,8 +131,8 @@ npx --yes --package=github:sunghoojung/videoexplain-skill \
 ```
 
 Choose `--quality l`, `m`, or `h` for 480p, 720p, or 1080p. Use `--scenes A,B`
-to render only some scenes while iterating, `--python` to pick the interpreter
-with Manim, and `--voice` only when choosing a different local voice. See the
+to render only some scenes while iterating, `--python` to pick a different
+interpreter with Manim, and `--voice` only when choosing a different local voice. See the
 [Manim guide](skills/explain-concept/references/manim.md) for the project format,
 beat timing, and supplied audio. Use a new or empty output directory.
 
@@ -142,14 +144,11 @@ node skills/explain-concept/scripts/explain-concept.mjs render \
   --project skills/explain-concept/assets/manim/project.example.json --output video
 ```
 
-PDF ingestion is optional and needs Python 3.11+ with `pypdf`:
+PDF ingestion uses `pypdf`, which `setup` installs alongside Manim:
 
 ```bash
-uv venv --python 3.12 .venv
-uv pip install --python .venv/bin/python -r skills/explain-concept/requirements.txt
 npx --yes --package=github:sunghoojung/videoexplain-skill \
-  explain-concept ingest --paper paper.pdf --output paper-source \
-  --python .venv/bin/python
+  explain-concept ingest --paper paper.pdf --output paper-source
 ```
 
 Every command supports `--help`. Results use JSON on stdout; diagnostics use stderr.

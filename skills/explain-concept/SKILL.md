@@ -88,7 +88,10 @@ voice; leave `--voice` unset unless the user asks for another voice. Use
 supplied narration audio when the user provides it. On Linux, the CLI uses
 `espeak-ng` or `espeak`. The CLI never calls another language model.
 
-If a dependency is missing, `doctor` prints the exact setup command. Complete
+If Manim is missing, run `setup` once; it installs Manim into a shared
+environment that later sessions find automatically, so do not create a separate
+Python environment per project. For anything else missing, `doctor` prints the
+exact setup command. Complete
 the lesson plan, narration, and source; resolve the missing dependency when
 authorized and feasible; then retry. If rendering stays blocked, report the
 exact limitation and deliver the authored project. Do not present a storyboard
