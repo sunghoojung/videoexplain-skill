@@ -9,14 +9,17 @@ zoom. These are exactly the tools for showing an idea before naming it.
 
 ```bash
 npx --yes --package=github:sunghoojung/videoexplain-skill explain-concept doctor
+npx --yes --package=github:sunghoojung/videoexplain-skill explain-concept setup
 ```
 
 `doctor` reports Manim, LaTeX, ffmpeg, and speech readiness and prints setup
 commands for anything missing. In short:
 
-- Python 3.11+ with Manim: `uv venv --python 3.12 .venv && uv pip install
-  --python .venv/bin/python -r <skill>/requirements.txt`. On macOS, Manim needs
-  `brew install cairo pango pkg-config` first.
+- Manim: run `explain-concept setup` once. It creates a shared Python
+  environment (`~/.local/share/explain-concept/venv`, or `EXPLAIN_CONCEPT_HOME`)
+  that every project, terminal, and agent session finds automatically. Manim
+  needs the system libraries cairo and pango: `brew install cairo pango
+  pkg-config` on macOS.
 - LaTeX with `dvisvgm` for `MathTex` and `Tex`: TinyTeX (no sudo), MacTeX or
   BasicTeX, or TeX Live. The CLI finds TinyTeX and MacTeX even when they are not
   on `PATH`.
@@ -24,7 +27,7 @@ commands for anything missing. In short:
 
 The renderer looks for Python with Manim in `--python`, then
 `EXPLAIN_CONCEPT_PYTHON`, then `.venv` in the working directory or beside
-`project.json`, then `python3`.
+`project.json`, then the shared environment, then `python3`.
 
 ## Project format
 

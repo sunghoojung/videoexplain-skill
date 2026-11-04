@@ -19,6 +19,7 @@ import {
   fileInfo,
   findPython,
   run,
+  sharedEnvironment,
   skill,
   speechEngine,
   texPath,
@@ -39,6 +40,7 @@ const agentRoots = {
 };
 const schemas = {
   doctor: { python: { type: "string" } },
+  setup: {},
   install: {
     agent: { type: "string", default: "codex" },
     path: { type: "string" },
@@ -67,6 +69,8 @@ const schemas = {
 const commandHelp = {
   doctor:
     "Check paper ingestion and narrated rendering dependencies. Optional: --python <interpreter>.",
+  setup:
+    "Create or update the shared Python environment with Manim and pypdf, found automatically by every project and agent session. Location: EXPLAIN_CONCEPT_HOME, else ~/.local/share/explain-concept. LaTeX is installed separately (see doctor).",
   install:
     "Install the skill. --agent codex|claude|opencode (default codex); --path <skills-parent>; --replace keeps a backup of the existing installation.",
   guide:
@@ -210,9 +214,7 @@ async function doctor(values) {
   if (!ffmpegReady) help.push("Install ffmpeg (includes ffprobe) and put it on PATH.");
   if (!manimPython)
     help.push(
-      "Install Manim: uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r " +
-        join(skill, "requirements.txt") +
-        " (on macOS first: brew install cairo pango pkg-config).",
+      `Install Manim once for every project: ${invocation} setup (needs system cairo and pango: brew install cairo pango pkg-config on macOS, apt install libcairo2-dev libpango1.0-dev pkg-config on Debian/Ubuntu).`,
     );
   if (!tex)
     help.push(
@@ -222,6 +224,7 @@ async function doctor(values) {
     version: VERSION,
     manim: manimPython && ffmpegReady ? "ready" : "not ready",
     manim_python: manimPython,
+    shared_environment: sharedEnvironment().venv,
     latex: tex ? "ready" : "latex and dvisvgm not found",
     remotion:
       remotion && ffmpegReady
@@ -233,6 +236,75 @@ async function doctor(values) {
     paper_ingestion: paperPython ? "ready" : "pypdf needed",
     installed_for: installed.filter(Boolean),
     ...(help.length ? { help } : {}),
+  };
+}
+
+// Point C extension builds (pycairo, manimpango) at Homebrew libraries. This
+// matters when pkg-config does not come from Homebrew, for example from Nix.
+async function homebrewBuildEnv() {
+  if (process.platform !== "darwin") return {};
+  const result = await run("brew", ["--prefix"]).catch(() => null);
+  const prefix = result?.code === 0 ? result.stdout.trim() : null;
+  if (!prefix) return {};
+  const withExisting = (name, value, separator) =>
+    [value, process.env[name]].filter(Boolean).join(separator);
+  return {
+    PKG_CONFIG_PATH: withExisting(
+      "PKG_CONFIG_PATH",
+      `${prefix}/lib/pkgconfig:${prefix}/share/pkgconfig`,
+      ":",
+    ),
+    CFLAGS: withExisting("CFLAGS", `-I${prefix}/include`, " "),
+    LDFLAGS: withExisting("LDFLAGS", `-L${prefix}/lib`, " "),
+  };
+}
+
+async function basePython() {
+  for (const program of ["python3.13", "python3.12", "python3.11", "python3"])
+    if (
+      await available(program, [
+        "-c",
+        "import sys; sys.exit(sys.version_info < (3, 11))",
+      ])
+    )
+      return program;
+  throw new Error("Setup needs uv or Python 3.11+ on PATH.");
+}
+
+async function setup() {
+  const { venv, python } = sharedEnvironment();
+  const requirements = join(skill, "requirements.txt");
+  const env = { ...process.env, ...(await homebrewBuildEnv()) };
+  const uv = await available("uv", ["--version"]);
+  const step = async (program, args) => {
+    const result = await run(program, args, 1800000, { env });
+    if (result.code !== 0) {
+      const detail = (result.stderr || result.stdout).trim().slice(-2500);
+      const hint = /cairo|pango|pkg-config/i.test(detail)
+        ? " Install the system libraries first: brew install cairo pango pkg-config (macOS) or apt install libcairo2-dev libpango1.0-dev pkg-config (Debian/Ubuntu)."
+        : "";
+      throw new Error(`Setup failed.${hint}\n${detail}`);
+    }
+  };
+  if (!(await fileInfo(python))) {
+    console.error(`Creating the shared environment in ${venv}...`);
+    await mkdir(join(venv, ".."), { recursive: true });
+    if (uv) await step("uv", ["venv", "--python", "3.12", venv]);
+    else await step(await basePython(), ["-m", "venv", venv]);
+  }
+  console.error("Installing Manim and pypdf (the first run can take a few minutes)...");
+  if (uv)
+    await step("uv", ["pip", "install", "--python", python, "-r", requirements]);
+  else await step(python, ["-m", "pip", "install", "-r", requirements]);
+  const ready = (await findPython(python, "manim")) === python;
+  const tex = await texPath();
+  return {
+    status: ready ? "ready" : "installed, but manim does not import",
+    python,
+    latex: tex ? "ready" : "not found",
+    ...(tex
+      ? {}
+      : { next: `Install LaTeX for formulas; ${invocation} doctor shows how.` }),
   };
 }
 
@@ -335,6 +407,7 @@ export async function main(args) {
       return;
     }
     if (command === "doctor") return emit(await doctor(values));
+    if (command === "setup") return emit(await setup());
     if (command === "lint") {
       if (!values.project) throw usage(commandHelp.lint);
       const project = JSON.parse(await readFile(resolve(values.project), "utf8"));
@@ -373,7 +446,7 @@ export async function main(args) {
         error: error.message,
         help:
           commandHelp[command] ||
-          "Commands: doctor, install, guide, lint, ingest, render",
+          "Commands: doctor, setup, install, guide, lint, ingest, render",
       }),
     );
   }

@@ -71,9 +71,32 @@ export async function speechEngine() {
 }
 
 /**
+ * The shared Python environment that `setup` creates, so every project, shell,
+ * and agent session finds Manim without per-project installs or environment
+ * variables. Override the location with EXPLAIN_CONCEPT_HOME.
+ */
+export function sharedEnvironment() {
+  const home =
+    process.env.EXPLAIN_CONCEPT_HOME ||
+    join(
+      process.env.XDG_DATA_HOME || join(homedir(), ".local", "share"),
+      "explain-concept",
+    );
+  const venv = join(home, "venv");
+  return {
+    venv,
+    python:
+      process.platform === "win32"
+        ? join(venv, "Scripts", "python.exe")
+        : join(venv, "bin", "python"),
+  };
+}
+
+/**
  * Find Python 3.11+ that can import `module`. Checks an explicit choice, then
  * EXPLAIN_CONCEPT_PYTHON, then virtual environments in the given directories
- * (default: the working directory), then python3/python on PATH.
+ * (default: the working directory), then the shared environment from `setup`,
+ * then python3/python on PATH.
  */
 export async function findPython(explicit, module, directories = ["."]) {
   const selected =
@@ -89,6 +112,7 @@ export async function findPython(explicit, module, directories = ["."]) {
             resolve(dir, ".venv/Scripts/python.exe"),
           ]),
         ),
+        sharedEnvironment().python,
         "python3",
         "python",
       ];
