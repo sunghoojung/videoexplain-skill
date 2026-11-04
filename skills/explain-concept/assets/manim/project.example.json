@@ -1,0 +1,39 @@
+{
+  "title": "How fast does a square grow?",
+  "source": "square_derivative.py",
+  "scenes": [
+    {
+      "name": "Puzzle",
+      "beats": [
+        {"text": "Here is a square, three units on each side. Its area is nine: nine little unit squares."},
+        {"text": "Now stretch each side by just one tenth. How much area did we add? Make a guess before we look."},
+        {"text": "The new area comes in three pieces: a strip along the top, a strip down the side, and one tiny corner."},
+        {"text": "Each strip is three long and one tenth thin, so each adds three tenths. The corner is a tenth by a tenth, just one hundredth."},
+        {"text": "Add them up, and the area grew by sixty one hundredths. Almost all of it came from the two strips."}
+      ]
+    },
+    {
+      "name": "Shrink",
+      "beats": [
+        {"text": "Now make the nudge smaller, and watch what happens to each piece."},
+        {"text": "The strips shrink in step with the nudge. But the corner shrinks far faster, because it is small in both directions. Up close, it is barely a speck."},
+        {"text": "So ask a sharper question. How much new area do we get for each bit of nudge? Divide each row's new area by its nudge."},
+        {"text": "The answer closes in on six. And six is simply the two strips, each three long."},
+        {"text": "Nothing here depended on the side being three. Change the side, and the answer follows along: always two times the side."},
+        {"text": "Each strip is exactly as long as the side. So for every bit of nudge, you gain two sides' worth of new area."}
+      ]
+    },
+    {
+      "name": "NameIt",
+      "beats": [
+        {"text": "Let's write down what we found, in plain words first. The new area, divided by the nudge, is about two times the side."},
+        {"text": "Mathematicians like short names. The side usually gets called x."},
+        {"text": "The nudge is a tiny change in the side, so we write it with a little d in front."},
+        {"text": "And the new area is a tiny change in the square's area. So it gets the same little d."},
+        {"text": "Now let the nudge shrink all the way to nothing. The corner vanishes, the approximation becomes exact, and the result has a name: the derivative."},
+        {"text": "Plug in a side of three, and out comes six, exactly what the strips told us."},
+        {"text": "So this formula is not a rule to memorize. It is a picture: two edges where new area appears. Try the same idea on a growing cube."}
+      ]
+    }
+  ]
+}

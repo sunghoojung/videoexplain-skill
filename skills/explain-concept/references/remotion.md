@@ -1,4 +1,11 @@
-# Produce a narrated Remotion video
+# Produce a narrated Remotion video (alternative engine)
+
+Manim is the default engine; see [manim.md](manim.md). Use this React/SVG
+engine only when the user asks for it or Manim cannot be installed. It has no
+LaTeX typesetting, so equation-heavy lessons look and teach better in Manim.
+The teaching rules in [teaching.md](teaching.md) apply unchanged: intuition
+before notation, formulas built one piece at a time, and narration that
+explains meaning rather than reading symbols.
 
 ## Author the lesson
 
@@ -9,8 +16,9 @@ preserve units, experimental conditions, and source references.
 
 Use [visual-reasoning.md](visual-reasoning.md) to storyboard state changes,
 invariants, and the bridge from picture to notation before authoring scenes.
-The starter constructs a vector, transforms basis vectors and the whole plane,
-then derives matrix multiplication and area scaling from the same objects.
+The starter in `assets/remotion/` constructs a vector, transforms basis vectors
+and the whole plane, then derives matrix multiplication and area scaling from
+the same objects.
 
 Split narration into short beats corresponding to visible steps. Keep each
 beat concise enough to read as a caption, usually one or two sentences. Reduce
@@ -62,11 +70,12 @@ Write `project.json` beside the authored scene module:
 ```
 
 `source` is a JSX, TSX, JS, or TS module exporting a named React component for
-each scene. Source and optional beat `audio` paths are relative to the project.
-Place images, fonts, and other assets in a sibling `public/` directory and access
-them using Remotion's `staticFile()`. Set `public` to another asset directory if
-needed. `public/__narration` is reserved for generated speech. Set `captions` to
-`false` only when visible captions are unwanted; the SRT is still produced.
+each scene; a `.py` source selects Manim instead. Source and optional beat
+`audio` paths are relative to the project. Place images, fonts, and other assets
+in a sibling `public/` directory and access them using Remotion's
+`staticFile()`. Set `public` to another asset directory if needed. Remotion
+burns captions into the frame; set `captions` to `false` only when visible
+captions are unwanted. The SRT is still produced.
 
 ## Scene contract
 
@@ -102,7 +111,7 @@ precisely timed visual changes. Animate through `useCurrentFrame`, `interpolate`
 and `spring`; CSS transitions, timers, and nondeterministic effects do not provide
 reliable frame-based rendering.
 
-For reusable geometry and timing, copy `assets/animation-kit.jsx` beside the
+For reusable geometry and timing, copy `assets/remotion/animation-kit.jsx` beside the
 scene module and import its helpers. `beatProgress(frame, beat, from, to)` uses
 fractions of the resolved beat duration and clamps before/after the window.
 `mixMatrix()` and `applyMatrix()` let a grid, vectors, and area share one state.
@@ -116,7 +125,7 @@ Scale layouts using `useVideoConfig()` rather than assuming a particular output
 resolution. Reserve the bottom 120 pixels of a 720p layout for captions. Prefer
 local assets and system fonts; load custom fonts before rendering. Explain the
 mechanism with actual intermediate states, rather than substituting text cards
-for a computation. The example in `assets/` demonstrates the contract; adapt
+for a computation. The example in `assets/remotion/` demonstrates the contract; adapt
 both visuals and narration to the requested subject.
 
 For unfamiliar APIs, use the installed source or official [Remotion documentation](https://www.remotion.dev/docs/).
@@ -129,9 +138,11 @@ scene module once, renders the complete timeline, and produces:
 
 - `explainer.mp4` with narration and optional visible captions.
 - `explainer.srt` with captions following measured speech.
-- `manifest.json` with scene timing, source paths, and paper references.
-- `preview/` with opening, middle, and final frames.
-- `public/` with narration/assets and `bundle/` with the compiled composition.
+- `manifest.json` with scene timing, source paths, paper references, and
+  narration warnings.
+- `preview/` with the middle and final frame of every beat and a
+  `contact-sheet.png` of all final frames.
+- `public/` with assets and `bundle/` with the compiled composition.
 
 Inspect the previews plus setup, midpoint, and result of each central mechanism
 and scene joins, as described in [visual-reasoning.md](visual-reasoning.md). Check

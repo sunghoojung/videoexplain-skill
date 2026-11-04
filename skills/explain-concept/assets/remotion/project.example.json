@@ -9,7 +9,7 @@
           "text": "What does a matrix do to this arrow? Its coordinates, two and one, mean two steps across and one step up."
         },
         {
-          "text": "Call the two unit directions e one and e two. Our arrow is two copies of e one, plus one copy of e two."
+          "text": "Call the two unit directions e one and e two. Our arrow is two copies of the first direction, plus one copy of the second."
         },
         {
           "text": "Choose a transformation. Send e one to two, one. Send e two to one, two. Those destinations become the two columns of our matrix."

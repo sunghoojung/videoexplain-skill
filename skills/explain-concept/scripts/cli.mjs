@@ -13,7 +13,16 @@ import { homedir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { VERSION } from "./version.mjs";
-import { available, fileInfo, run, skill, speechEngine } from "./runtime.mjs";
+import { lintProject } from "./narration.mjs";
+import {
+  available,
+  fileInfo,
+  findPython,
+  run,
+  skill,
+  speechEngine,
+  texPath,
+} from "./runtime.mjs";
 
 const require = createRequire(import.meta.url);
 
@@ -45,11 +54,14 @@ const schemas = {
     python: { type: "string" },
     "preview-pages": { type: "string" },
   },
+  lint: { project: { type: "string" } },
   render: {
     project: { type: "string" },
     output: { type: "string" },
     quality: { type: "string", default: "m" },
     voice: { type: "string" },
+    scenes: { type: "string" },
+    python: { type: "string" },
   },
 };
 const commandHelp = {
@@ -58,11 +70,13 @@ const commandHelp = {
   install:
     "Install the skill. --agent codex|claude|opencode (default codex); --path <skills-parent>; --replace keeps a backup of the existing installation.",
   guide:
-    "Read instructions. --mode concept|paper|production (default concept); --full shows complete text.",
+    "Read instructions. --mode concept|teaching|visual|manim|paper|remotion (default concept); --full shows complete text.",
   ingest:
     "Read a paper. Required: --paper <pdf-or-text> --output <new-directory>. Optional: --python <interpreter>, --preview-pages <0-20> (default 3).",
+  lint:
+    "Check narration before rendering: flags beats that read formulas aloud, contain math symbols, or are too long. Required: --project <project.json>.",
   render:
-    "Render an authored narrated explainer. Required: --project <project.json> --output <new-directory>. Optional: --quality l|m|h (default m), --voice <local-voice-name>.",
+    "Render an authored narrated explainer (Manim .py or React source). Required: --project <project.json> --output <new-directory>. Optional: --quality l|m|h (default m), --scenes <Name,Name> to render only some scenes, --voice <local-voice-name>, --python <interpreter with manim>.",
 };
 
 function emit(data) {
@@ -79,27 +93,12 @@ function ignored(path) {
 }
 
 async function pythonCommand(explicit) {
-  const selected = explicit || process.env.PAPEREXPLAIN_PYTHON;
-  const candidates = selected
-    ? [selected]
-    : [
-        resolve(".venv/bin/python"),
-        resolve(".venv/Scripts/python.exe"),
-        "python3",
-        "python",
-      ];
-  for (const program of candidates) {
-    if (
-      await available(program, [
-        "-c",
-        "import sys; sys.exit(sys.version_info < (3, 11))",
-      ])
-    )
-      return program;
-  }
-  throw new Error(
-    "Select Python 3.11+ with --python; PDF ingestion needs pypdf in the chosen environment.",
-  );
+  const python = await findPython(explicit, "pypdf");
+  if (!python)
+    throw new Error(
+      "Select Python 3.11+ with pypdf installed using --python; see requirements.txt.",
+    );
+  return python;
 }
 
 async function fingerprint(directory) {
@@ -177,19 +176,23 @@ async function install(values) {
 }
 
 async function doctor(values) {
-  const python = await pythonCommand(values.python).catch(() => null);
-  const [paper, media, speech, installed] = await Promise.all([
-    python &&
-      available(python, [
-        "-c",
-        "import importlib.util,sys; sys.exit(importlib.util.find_spec('pypdf') is None)",
-      ]),
-    Promise.all(
-      ["ffmpeg", "ffprobe"].map((tool) => available(tool, ["-version"])),
-    ),
-    speechEngine(),
-    fileInfo(join(agentRoots.codex, "explain-concept", "SKILL.md")),
-  ]);
+  const [paperPython, manimPython, media, speech, tex, installed] =
+    await Promise.all([
+      findPython(values.python, "pypdf"),
+      findPython(values.python, "manim"),
+      Promise.all(
+        ["ffmpeg", "ffprobe"].map((tool) => available(tool, ["-version"])),
+      ),
+      speechEngine(),
+      texPath(),
+      Promise.all(
+        Object.entries(agentRoots).map(async ([agent, root]) =>
+          (await fileInfo(join(root, "explain-concept", "SKILL.md")))
+            ? agent
+            : null,
+        ),
+      ),
+    ]);
   const remotion = [
     "remotion",
     "@remotion/bundler",
@@ -202,31 +205,48 @@ async function doctor(values) {
       return false;
     }
   });
+  const ffmpegReady = media.every(Boolean);
+  const help = [];
+  if (!ffmpegReady) help.push("Install ffmpeg (includes ffprobe) and put it on PATH.");
+  if (!manimPython)
+    help.push(
+      "Install Manim: uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r " +
+        join(skill, "requirements.txt") +
+        " (on macOS first: brew install cairo pango pkg-config).",
+    );
+  if (!tex)
+    help.push(
+      "Install LaTeX for MathTex: TinyTeX (no sudo) from https://yihui.org/tinytex/ then `tlmgr install standalone preview doublestroke ms setspace rsfs relsize ragged2e fundus-calligra microtype wasysym physics dvisvgm jknapltx wasy cm-super babel-english gnu-freefont mathastext cbfonts-fd`, or MacTeX/BasicTeX/TeX Live.",
+    );
   return {
-    renderer: "remotion",
-    browser: "Headless Chrome is downloaded on first render when needed",
     version: VERSION,
-    python,
-    paper_ingestion: paper ? "ready" : "pypdf needed",
-    rendering:
-      remotion && media.every(Boolean)
-        ? "ready"
+    manim: manimPython && ffmpegReady ? "ready" : "not ready",
+    manim_python: manimPython,
+    latex: tex ? "ready" : "latex and dvisvgm not found",
+    remotion:
+      remotion && ffmpegReady
+        ? "ready (Headless Chrome downloads on first render)"
         : "Run through the npx package with ffmpeg and ffprobe on PATH",
     narration: speech
-      ? "local speech ready"
+      ? `local speech ready (${speech})`
       : "supply beat audio or install a speech engine",
-    codex_skill: installed ? "installed" : "not installed",
+    paper_ingestion: paperPython ? "ready" : "pypdf needed",
+    installed_for: installed.filter(Boolean),
+    ...(help.length ? { help } : {}),
   };
 }
 
 async function guide(values) {
   const files = {
     concept: "SKILL.md",
+    teaching: "references/teaching.md",
+    visual: "references/visual-reasoning.md",
+    manim: "references/manim.md",
     paper: "references/paper.md",
-    production: "references/animated-video.md",
+    remotion: "references/remotion.md",
   };
   if (!Object.hasOwn(files, values.mode))
-    throw usage("--mode must be concept, paper, or production.");
+    throw usage(`--mode must be one of ${Object.keys(files).join(", ")}.`);
   const path = join(skill, files[values.mode]);
   const text = await readFile(path, "utf8");
   return {
@@ -315,6 +335,21 @@ export async function main(args) {
       return;
     }
     if (command === "doctor") return emit(await doctor(values));
+    if (command === "lint") {
+      if (!values.project) throw usage(commandHelp.lint);
+      const project = JSON.parse(await readFile(resolve(values.project), "utf8"));
+      const warnings = lintProject(project);
+      return emit({
+        beats: (project.scenes || []).reduce(
+          (sum, scene) => sum + (scene.beats || []).length,
+          0,
+        ),
+        warnings,
+        ...(warnings.length
+          ? { next: "Rewrite flagged beats so narration explains meaning and the formula stays on screen." }
+          : {}),
+      });
+    }
     if (command === "guide") return emit(await guide(values));
     if (command === "install")
       return emit({
@@ -338,7 +373,7 @@ export async function main(args) {
         error: error.message,
         help:
           commandHelp[command] ||
-          "Commands: doctor, install, guide, ingest, render",
+          "Commands: doctor, install, guide, lint, ingest, render",
       }),
     );
   }
